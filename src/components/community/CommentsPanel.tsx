@@ -1,5 +1,6 @@
-import { FormEvent, useState } from "react";
-import { Comment } from "../../api/community";
+import { useState } from "react";
+import type { FormEvent } from "react";
+import type { Comment } from "../../api/community";
 
 type CommentsPanelProps = {
   title?: string;

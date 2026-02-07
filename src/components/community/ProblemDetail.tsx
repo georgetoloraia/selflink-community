@@ -1,4 +1,4 @@
-import { Problem } from "../../api/community";
+import type { Problem } from "../../api/community";
 import CommentsPanel from "./CommentsPanel";
 import ArtifactsPanel from "./ArtifactsPanel";
 

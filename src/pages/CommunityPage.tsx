@@ -63,7 +63,7 @@ const CommunityPage = () => {
     return () => window.removeEventListener("sl:unauthorized", handler);
   }, []);
 
-  const setAgreementFor = (problemId: number | null, action: () => Promise<void>) => {
+  const setAgreementFor = (problemId: number | null, action: () => Promise<unknown>) => {
     setAgreementProblemId(problemId);
     pendingActionRef.current = {
       consumed: false,
@@ -82,7 +82,7 @@ const CommunityPage = () => {
     setAgreementOpen(true);
   };
 
-  const runGuarded = async (action: () => Promise<void>, problemId?: number | null) => {
+  const runGuarded = async (action: () => Promise<unknown>, problemId?: number | null) => {
     if (!isAuthed) {
       setLoginOpen(true);
       return;
