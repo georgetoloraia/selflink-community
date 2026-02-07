@@ -56,14 +56,22 @@ export type LoginResponse = {
   [key: string]: unknown;
 };
 
+const unwrapResults = <T,>(data: unknown): T[] => {
+  if (Array.isArray(data)) return data as T[];
+  if (data && typeof data === "object" && Array.isArray((data as any).results)) {
+    return (data as any).results as T[];
+  }
+  return [];
+};
+
 export const getSummary = async () => {
   const { data } = await apiClient.get<Summary>("/summary/");
   return data;
 };
 
 export const listProblems = async (params?: { status?: string }) => {
-  const { data } = await apiClient.get<Problem[]>("/problems/", { params });
-  return data;
+  const { data } = await apiClient.get("/problems/", { params });
+  return unwrapResults<Problem>(data);
 };
 
 export const getProblem = async (id: number) => {
@@ -72,8 +80,8 @@ export const getProblem = async (id: number) => {
 };
 
 export const listProblemComments = async (id: number) => {
-  const { data } = await apiClient.get<Comment[]>(`/problems/${id}/comments/`);
-  return data;
+  const { data } = await apiClient.get(`/problems/${id}/comments/`);
+  return unwrapResults<Comment>(data);
 };
 
 export const createProblemComment = async (id: number, body: string, parent_id?: number) => {
@@ -112,8 +120,8 @@ export const acceptAgreement = async (id: number) => {
 };
 
 export const listArtifacts = async (problemId: number) => {
-  const { data } = await apiClient.get<Artifact[]>(`/problems/${problemId}/artifacts/`);
-  return data;
+  const { data } = await apiClient.get(`/problems/${problemId}/artifacts/`);
+  return unwrapResults<Artifact>(data);
 };
 
 export const createArtifact = async (
@@ -130,8 +138,8 @@ export const getArtifact = async (id: number) => {
 };
 
 export const listArtifactComments = async (id: number) => {
-  const { data } = await apiClient.get<Comment[]>(`/artifacts/${id}/comments/`);
-  return data;
+  const { data } = await apiClient.get(`/artifacts/${id}/comments/`);
+  return unwrapResults<Comment>(data);
 };
 
 export const createArtifactComment = async (id: number, body: string, parent_id?: number) => {
