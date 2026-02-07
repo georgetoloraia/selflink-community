@@ -1,4 +1,5 @@
-import { FormEvent, useState } from "react";
+import { useState } from "react";
+import type { FormEvent } from "react";
 import { useMutation } from "@tanstack/react-query";
 import * as communityApi from "../../api/community";
 
