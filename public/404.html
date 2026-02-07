@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SelfLink Community</title>
+    <script>
+      (function () {
+        var l = window.location;
+        var base = "/selflink-community";
+        if (l.pathname.indexOf(base) !== 0) {
+          l.replace(base + "/");
+          return;
+        }
+        var redirect = base + "/?redirect=" + encodeURIComponent(l.pathname + l.search + l.hash);
+        l.replace(redirect);
+      })();
+    </script>
+  </head>
+  <body></body>
+</html>
