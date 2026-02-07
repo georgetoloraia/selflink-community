@@ -30,15 +30,21 @@ export const clearStoredAuth = () => {
 
 const base = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "";
 if (!base) {
-  throw new Error("VITE_API_BASE_URL is not set");
+  throw new Error("VITE_API_BASE_URL is required");
 }
 
-const apiBase = base
-  ? `${base.replace(/\/$/, "")}/api/v1/community`
-  : "/api/v1/community";
+const apiBase = `${base.replace(/\/$/, "")}/api/v1/community/`;
+console.log("Community API baseURL:", apiBase);
 
 export const apiClient = axios.create({
   baseURL: apiBase,
+});
+
+apiClient.interceptors.request.use((config) => {
+  if (import.meta.env.DEV && config.baseURL?.replace(/\/$/, "") === base.replace(/\/$/, "")) {
+    throw new Error("API baseURL resolved to root; expected /api/v1/community/");
+  }
+  return config;
 });
 
 

@@ -147,11 +147,21 @@ const CommunityPage = () => {
   const problems = problemsQuery.data ?? [];
   const selectedProblem = problemQuery.data ?? null;
 
+  const fmtMoney = (value: unknown) => {
+    if (!value || typeof value !== "object") return "—";
+    const amount = (value as any).amount;
+    const currency = (value as any).currency;
+    if (amount === null || amount === undefined || currency === null || currency === undefined) {
+      return "—";
+    }
+    return `${amount} ${currency}`;
+  };
+
   const dashboardItems = useMemo(
     () => [
-      { label: "Total SelfLink Income", value: summary?.total_income ?? "--" },
-      { label: "Contributors", value: summary?.contributors ?? "--" },
-      { label: "Contributors Reward", value: summary?.contributors_reward ?? "--" },
+      { label: "Total SelfLink Income", value: fmtMoney(summary?.total_income) },
+      { label: "Contributors", value: summary?.contributors?.count ?? 0 },
+      { label: "Contributors Reward", value: fmtMoney(summary?.contributors_reward) },
     ],
     [summary]
   );
