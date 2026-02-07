@@ -28,12 +28,19 @@ export const clearStoredAuth = () => {
   localStorage.removeItem(STORAGE_KEY);
 };
 
-const base = import.meta.env.VITE_API_BASE_URL as string | undefined;
-const apiBase = base ? `${base.replace(/\/$/, "")}/api/v1/community` : "/api/v1/community";
+const base = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "";
+if (!base) {
+  throw new Error("VITE_API_BASE_URL is not set");
+}
+
+const apiBase = base
+  ? `${base.replace(/\/$/, "")}/api/v1/community`
+  : "/api/v1/community";
 
 export const apiClient = axios.create({
   baseURL: apiBase,
 });
+
 
 apiClient.interceptors.request.use((config) => {
   const stored = readStoredAuth();
