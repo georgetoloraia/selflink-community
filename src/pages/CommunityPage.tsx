@@ -148,13 +148,17 @@ const CommunityPage = () => {
   const selectedProblem = problemQuery.data ?? null;
 
   const fmtMoney = (value: unknown) => {
-    if (!value || typeof value !== "object") return "—";
-    const amount = (value as any).amount;
-    const currency = (value as any).currency;
-    if (amount === null || amount === undefined || currency === null || currency === undefined) {
-      return "—";
+    if (value === null || value === undefined) return "—";
+    if (typeof value === "string" || typeof value === "number") return String(value);
+    if (typeof value === "object") {
+      const amount = (value as any).amount;
+      const currency = (value as any).currency;
+      if (amount === null || amount === undefined || currency === null || currency === undefined) {
+        return "—";
+      }
+      return `${amount} ${currency}`;
     }
-    return `${amount} ${currency}`;
+    return "—";
   };
 
   const dashboardItems = useMemo(
