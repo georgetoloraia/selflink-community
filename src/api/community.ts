@@ -1,9 +1,9 @@
 import { apiClient } from "./client";
 
 export type Summary = {
-  total_income?: number | string;
-  contributors?: number | string;
-  contributors_reward?: number | string;
+  total_income?: number | string | { amount?: number | string; currency?: string };
+  contributors?: { count: number };
+  contributors_reward?: number | string | { amount?: number | string; currency?: string };
   [key: string]: unknown;
 };
 
