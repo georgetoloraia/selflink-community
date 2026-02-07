@@ -1,51 +1,54 @@
 import { apiClient } from "./client";
 
+export type Money = { amount: string; currency: string };
+export type UserTiny = { id: number; username: string; avatar_url: string | null };
+
 export type Summary = {
-  total_income?: number | string | { amount?: number | string; currency?: string };
-  contributors?: { count: number };
-  contributors_reward?: number | string | { amount?: number | string; currency?: string };
-  [key: string]: unknown;
+  as_of: string;
+  total_income: Money;
+  contributors_reward: Money;
+  contributors: { count: number };
+  distribution_preview: Array<{
+    user: UserTiny;
+    amount: string;
+    currency: string;
+  }>;
 };
 
 export type Problem = {
   id: number;
-  title?: string;
-  description?: string;
-  status?: string;
-  like_count?: number;
-  comment_count?: number;
-  artifact_count?: number;
-  working_count?: number;
-  working_on_this?: Array<{ id?: number; name?: string; handle?: string; username?: string }>;
-  has_liked?: boolean;
-  is_working?: boolean;
-  [key: string]: unknown;
+  title: string;
+  description: string;
+  status: string;
+  created_at: string;
+  comments_count: number;
+  likes_count: number;
+  working_count: number;
+  has_liked: boolean;
+  is_working: boolean;
+  working_on_this?: UserTiny[];
 };
 
 export type Comment = {
   id: number;
-  body?: string;
-  author?: { id?: number; name?: string; handle?: string; username?: string };
-  created_at?: string;
-  [key: string]: unknown;
+  body: string;
+  created_at: string;
+  user: UserTiny;
+  likes_count: number;
+  has_liked: boolean;
 };
 
 export type Artifact = {
   id: number;
-  type?: string;
-  title?: string;
-  description?: string;
-  url?: string;
-  created_at?: string;
-  created_by?: { id?: number; name?: string; handle?: string; username?: string };
-  [key: string]: unknown;
+  title: string;
+  description: string;
+  url: string;
+  created_at: string;
+  user: UserTiny;
 };
 
-export type Agreement = {
-  license_spdx?: string;
-  version?: string;
-  text?: string;
-  [key: string]: unknown;
+export type AgreementResponse = {
+  agreement: { id: number; text: string; is_active: boolean } | null;
 };
 
 export type LoginResponse = {
@@ -89,7 +92,7 @@ export const createProblemComment = async (id: number, body: string, parent_id?:
   return data;
 };
 
-export const createProblem = async (payload: { title: string; description?: string; status?: string }) => {
+export const createProblem = async (payload: { title: string; description?: string }) => {
   const { data } = await apiClient.post<Problem>("problems/", payload);
   return data;
 };
@@ -110,7 +113,7 @@ export const unworkOnProblem = async (id: number) => {
 };
 
 export const getAgreement = async (id: number) => {
-  const { data } = await apiClient.get<Agreement>(`problems/${id}/agreement/`);
+  const { data } = await apiClient.get<AgreementResponse>(`problems/${id}/agreement/`);
   return data;
 };
 
@@ -126,7 +129,7 @@ export const listArtifacts = async (problemId: number) => {
 
 export const createArtifact = async (
   problemId: number,
-  payload: { type?: string; title: string; description?: string; url?: string }
+  payload: { title: string; description?: string; url?: string }
 ) => {
   const { data } = await apiClient.post<Artifact>(`problems/${problemId}/artifacts/`, payload);
   return data;

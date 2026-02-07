@@ -47,9 +47,7 @@ const CommentsPanel = ({
         ) : (
           comments.map((comment) => (
             <div key={comment.id} className="comment-item">
-              <div className="comment-author">
-                {comment.author?.name || comment.author?.username || comment.author?.handle || "Anonymous"}
-              </div>
+              <div className="comment-author">{comment.user?.username ?? "Anonymous"}</div>
               <div className="comment-body">{comment.body}</div>
             </div>
           ))

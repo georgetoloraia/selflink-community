@@ -71,7 +71,7 @@ const ProblemDetail = ({
           <div className="working-list">
             {workingList.map((person, idx) => (
               <span key={`${person.id ?? idx}`} className="working-pill">
-                {person.name || person.username || person.handle || "Contributor"}
+                {person.username || "Contributor"}
               </span>
             ))}
           </div>

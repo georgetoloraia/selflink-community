@@ -129,7 +129,7 @@ const CommunityPage = () => {
   });
 
   const createArtifactMutation = useMutation({
-    mutationFn: ({ id, payload }: { id: number; payload: { type?: string; title: string; description?: string; url?: string } }) =>
+    mutationFn: ({ id, payload }: { id: number; payload: { title: string; description?: string; url?: string } }) =>
       communityApi.createArtifact(id, payload),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["artifacts", selectedId] });
@@ -147,18 +147,12 @@ const CommunityPage = () => {
   const problems = problemsQuery.data ?? [];
   const selectedProblem = problemQuery.data ?? null;
 
-  const fmtMoney = (value: unknown) => {
-    if (value === null || value === undefined) return "—";
-    if (typeof value === "string" || typeof value === "number") return String(value);
-    if (typeof value === "object") {
-      const amount = (value as any).amount;
-      const currency = (value as any).currency;
-      if (amount === null || amount === undefined || currency === null || currency === undefined) {
-        return "—";
-      }
-      return `${amount} ${currency}`;
-    }
-    return "—";
+  const fmtMoney = (value: { amount: string; currency: string } | null | undefined) => {
+    if (!value) return "—";
+    const amount = value.amount;
+    const currency = value.currency;
+    if (!amount || !currency) return "—";
+    return `${amount} ${currency}`;
   };
 
   const dashboardItems = useMemo(

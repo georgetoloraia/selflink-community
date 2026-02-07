@@ -13,19 +13,16 @@ type NewProblemModalProps = {
 const NewProblemModal = ({ isOpen, onClose, onCreated, onError }: NewProblemModalProps) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [status, setStatus] = useState("open");
 
   const mutation = useMutation({
     mutationFn: () =>
       communityApi.createProblem({
         title: title.trim(),
         description: description.trim() || undefined,
-        status: status.trim() || undefined,
       }),
     onSuccess: (problem) => {
       setTitle("");
       setDescription("");
-      setStatus("open");
       onCreated(problem);
       onClose();
     },
@@ -58,10 +55,6 @@ const NewProblemModal = ({ isOpen, onClose, onCreated, onError }: NewProblemModa
           <label className="field">
             <span>Description</span>
             <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} />
-          </label>
-          <label className="field">
-            <span>Status</span>
-            <input value={status} onChange={(e) => setStatus(e.target.value)} placeholder="open" />
           </label>
           <div className="modal-actions">
             <button type="button" className="btn secondary" onClick={onClose}>
