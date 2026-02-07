@@ -4,7 +4,7 @@ import CommunityPage from "./pages/CommunityPage";
 const AppRoutes = () => {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/community" replace />} />
+      <Route path="/" element={<Navigate to="api/v1/community" replace />} />
       <Route path="/community" element={<CommunityPage />} />
     </Routes>
   );
