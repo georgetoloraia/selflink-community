@@ -117,3 +117,8 @@ export const getStatus = (error: unknown): number | null => {
 };
 
 export const isNotFound = (error: unknown): boolean => getStatus(error) === 404;
+
+export const isNetworkError = (error: unknown): boolean => {
+  if (!error || typeof error !== "object") return false;
+  return !(error as any).response;
+};
