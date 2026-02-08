@@ -12,6 +12,10 @@
           l.replace(base + "/");
           return;
         }
+        if (l.search.indexOf("redirect=") !== -1 || l.search.indexOf("p=") !== -1) {
+          l.replace(base + "/");
+          return;
+        }
         var redirect = base + "/?redirect=" + encodeURIComponent(l.pathname + l.search + l.hash);
         l.replace(redirect);
       })();
