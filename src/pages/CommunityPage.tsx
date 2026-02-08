@@ -23,6 +23,7 @@ const CommunityPage = () => {
   const [staleNotice, setStaleNotice] = useState<string | null>(null);
 
   const pendingActionRef = useRef<{ action: () => Promise<void>; consumed: boolean } | null>(null);
+  const lastBadIdRef = useRef<number | null>(null);
 
   const summaryQuery = useQuery<communityApi.CommunitySummary>({
     queryKey: ["summary"],
@@ -38,23 +39,42 @@ const CommunityPage = () => {
     queryKey: ["problem", selectedId],
     queryFn: () => communityApi.getProblem(selectedId as number),
     enabled: selectedId !== null,
+    retry: (failureCount, error) => {
+      const status = getStatus(error);
+      if (status && status >= 400 && status < 500) return false;
+      return failureCount < 2;
+    },
   });
+
+  const problemExists = Boolean(problemQuery.data) && !problemQuery.isError;
 
   const commentsQuery = useQuery<communityApi.ProblemComment[]>({
     queryKey: ["problem-comments", selectedId],
     queryFn: () => communityApi.listProblemComments(selectedId as number),
-    enabled: selectedId !== null,
+    enabled: selectedId !== null && problemExists,
+    retry: (failureCount, error) => {
+      const status = getStatus(error);
+      if (status && status >= 400 && status < 500) return false;
+      return failureCount < 2;
+    },
   });
 
   const artifactsQuery = useQuery<communityApi.WorkArtifact[]>({
     queryKey: ["artifacts", selectedId],
     queryFn: () => communityApi.listArtifacts(selectedId as number),
-    enabled: selectedId !== null,
+    enabled: selectedId !== null && problemExists,
+    retry: (failureCount, error) => {
+      const status = getStatus(error);
+      if (status && status >= 400 && status < 500) return false;
+      return failureCount < 2;
+    },
   });
 
   useEffect(() => {
     if (!selectedId && problemsQuery.data && problemsQuery.data.length > 0) {
-      setSelectedId(problemsQuery.data[0].id);
+      const candidate = problemsQuery.data[0].id;
+      if (lastBadIdRef.current === candidate) return;
+      setSelectedId(candidate);
     }
   }, [problemsQuery.data, selectedId]);
 
@@ -63,7 +83,12 @@ const CommunityPage = () => {
     if (selectedId === null) return;
     const exists = problemsQuery.data.some((problem) => problem.id === selectedId);
     if (!exists) {
-      setSelectedId(problemsQuery.data[0]?.id ?? null);
+      const candidate = problemsQuery.data[0]?.id ?? null;
+      if (candidate === lastBadIdRef.current) {
+        setSelectedId(null);
+      } else {
+        setSelectedId(candidate);
+      }
       setStaleNotice("This problem no longer exists. Select another.");
     }
   }, [problemsQuery.data, selectedId]);
@@ -78,6 +103,7 @@ const CommunityPage = () => {
 
   useEffect(() => {
     if (problemQuery.isError && getStatus(problemQuery.error) === 404) {
+      lastBadIdRef.current = selectedId;
       setSelectedId(null);
       setStaleNotice("This problem no longer exists. Select another.");
       void queryClient.invalidateQueries({ queryKey: ["problems"] });
@@ -86,6 +112,7 @@ const CommunityPage = () => {
 
   useEffect(() => {
     if (commentsQuery.isError && getStatus(commentsQuery.error) === 404) {
+      lastBadIdRef.current = selectedId;
       setSelectedId(null);
       setStaleNotice("This problem no longer exists. Select another.");
       void queryClient.invalidateQueries({ queryKey: ["problems"] });
@@ -94,6 +121,7 @@ const CommunityPage = () => {
 
   useEffect(() => {
     if (artifactsQuery.isError && getStatus(artifactsQuery.error) === 404) {
+      lastBadIdRef.current = selectedId;
       setSelectedId(null);
       setStaleNotice("This problem no longer exists. Select another.");
       void queryClient.invalidateQueries({ queryKey: ["problems"] });
@@ -290,7 +318,10 @@ const CommunityPage = () => {
         <ProblemList
           problems={problems}
           selectedId={selectedId}
-          onSelect={setSelectedId}
+          onSelect={(id) => {
+            if (lastBadIdRef.current === id) return;
+            setSelectedId(id);
+          }}
           onAddNew={() => setNewProblemOpen(true)}
           onRequireLogin={() => setLoginOpen(true)}
           isAuthed={isAuthed}
