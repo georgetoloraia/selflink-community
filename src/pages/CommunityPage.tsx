@@ -69,6 +69,14 @@ const CommunityPage = () => {
   }, [problemsQuery.data, selectedId]);
 
   useEffect(() => {
+    if (!problemsQuery.data || selectedId === null) return;
+    const exists = problemsQuery.data.some((problem) => problem.id === selectedId);
+    if (exists) {
+      setStaleNotice(null);
+    }
+  }, [problemsQuery.data, selectedId]);
+
+  useEffect(() => {
     if (problemQuery.isError && getStatus(problemQuery.error) === 404) {
       setSelectedId(null);
       setStaleNotice("This problem no longer exists. Select another.");
@@ -130,7 +138,7 @@ const CommunityPage = () => {
         setAgreementFor(problemId ?? selectedId ?? null, action);
         return;
       }
-      if (getErrorDetail(error) === "UNAUTHORIZED") {
+      if (getStatus(error) === 401) {
         await logout();
         setLoginOpen(true);
         return;
@@ -232,14 +240,20 @@ const CommunityPage = () => {
     return `${amount} ${currency}`;
   };
 
-  const dashboardItems = useMemo(
-    () => [
+  const dashboardItems = useMemo(() => {
+    if (summaryQuery.isError) {
+      return [
+        { label: "Total SelfLink Income", value: "—" },
+        { label: "Contributors", value: "—" },
+        { label: "Contributors Reward", value: "—" },
+      ];
+    }
+    return [
       { label: "Total SelfLink Income", value: fmtMoney(summary?.total_income) },
       { label: "Contributors", value: summary?.contributors?.count ?? 0 },
       { label: "Contributors Reward", value: fmtMoney(summary?.contributors_reward) },
-    ],
-    [summary]
-  );
+    ];
+  }, [summary, summaryQuery.isError]);
 
   const handleAgreementAccepted = () => {
     const pending = pendingActionRef.current;
