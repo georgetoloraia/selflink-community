@@ -9,8 +9,12 @@
       (function () {
         var params = new URLSearchParams(window.location.search);
         var redirect = params.get("redirect");
-        if (redirect) {
-          window.history.replaceState(null, "", redirect);
+        if (!redirect) return;
+        try {
+          var decoded = decodeURIComponent(redirect);
+          window.history.replaceState(null, "", decoded);
+        } catch (error) {
+          window.history.replaceState(null, "", "/selflink-community/");
         }
       })();
     </script>
