@@ -66,9 +66,25 @@ apiClient.interceptors.request.use((config) => {
 });
 
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    if (import.meta.env.DEV) {
+      const method = response.config.method?.toUpperCase();
+      const url = response.config.baseURL
+        ? `${response.config.baseURL}${response.config.url ?? ""}`
+        : response.config.url;
+      console.log("[API OK]", method, url, response.status, response.data);
+    }
+    return response;
+  },
   (error) => {
     const status = error?.response?.status;
+    if (import.meta.env.DEV) {
+      const method = error?.config?.method?.toUpperCase();
+      const url = error?.config?.baseURL
+        ? `${error.config.baseURL}${error.config.url ?? ""}`
+        : error?.config?.url;
+      console.log("[API ERROR]", method, url, status, error?.response?.data);
+    }
     if (status === 401) {
       clearStoredAuth();
       window.dispatchEvent(new CustomEvent("sl:unauthorized"));
