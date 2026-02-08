@@ -115,3 +115,5 @@ export const getStatus = (error: unknown): number | null => {
   const status = (error as any).response?.status;
   return typeof status === "number" ? status : null;
 };
+
+export const isNotFound = (error: unknown): boolean => getStatus(error) === 404;
