@@ -37,18 +37,39 @@ const CommunityPage = () => {
     queryKey: ["problem", selectedId],
     queryFn: () => communityApi.getProblem(selectedId as number),
     enabled: selectedId !== null,
+    onError: (error: unknown) => {
+      const status = (error as any)?.response?.status;
+      if (status === 404) {
+        setSelectedId(null);
+        void queryClient.invalidateQueries({ queryKey: ["problems"] });
+      }
+    },
   });
 
   const commentsQuery = useQuery({
     queryKey: ["problem-comments", selectedId],
     queryFn: () => communityApi.listProblemComments(selectedId as number),
     enabled: selectedId !== null,
+    onError: (error: unknown) => {
+      const status = (error as any)?.response?.status;
+      if (status === 404) {
+        setSelectedId(null);
+        void queryClient.invalidateQueries({ queryKey: ["problems"] });
+      }
+    },
   });
 
   const artifactsQuery = useQuery({
     queryKey: ["artifacts", selectedId],
     queryFn: () => communityApi.listArtifacts(selectedId as number),
     enabled: selectedId !== null,
+    onError: (error: unknown) => {
+      const status = (error as any)?.response?.status;
+      if (status === 404) {
+        setSelectedId(null);
+        void queryClient.invalidateQueries({ queryKey: ["problems"] });
+      }
+    },
   });
 
   useEffect(() => {
@@ -177,6 +198,11 @@ const CommunityPage = () => {
     setAgreementOpen(false);
   };
 
+  const handleNotFound = () => {
+    setSelectedId(null);
+    void queryClient.invalidateQueries({ queryKey: ["problems"] });
+  };
+
   return (
     <PageShell onLoginClick={() => setLoginOpen(true)}>
       <div className="dashboard-row">
@@ -225,6 +251,7 @@ const CommunityPage = () => {
             isLoading: artifactsQuery.isLoading,
             isAuthed,
             onRequireLogin: () => setLoginOpen(true),
+            onNotFound: handleNotFound,
             onCreate: (payload) =>
               runGuarded(
                 () => createArtifactMutation.mutateAsync({ id: selectedId as number, payload }),

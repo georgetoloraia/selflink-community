@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import * as communityApi from "../../api/community";
 
 export type ArtifactsPanelProps = {
@@ -11,6 +11,7 @@ export type ArtifactsPanelProps = {
   onRequireLogin: () => void;
   onCreate: (payload: { title: string; description?: string; url?: string }) => void;
   onCreateComment: (artifactId: number, body: string) => void;
+  onNotFound: () => void;
   error?: string | null;
 };
 
@@ -19,16 +20,24 @@ const ArtifactComments = ({
   isAuthed,
   onRequireLogin,
   onCreateComment,
+  onNotFound,
 }: {
   artifactId: number;
   isAuthed: boolean;
   onRequireLogin: () => void;
   onCreateComment: (artifactId: number, body: string) => void;
+  onNotFound: () => void;
 }) => {
   const [body, setBody] = useState("");
   const commentsQuery = useQuery({
     queryKey: ["artifact-comments", artifactId],
     queryFn: () => communityApi.listArtifactComments(artifactId),
+    onError: (error: unknown) => {
+      const status = (error as any)?.response?.status;
+      if (status === 404) {
+        onNotFound();
+      }
+    },
   });
 
   const handleSubmit = (event: FormEvent) => {
@@ -80,9 +89,9 @@ const ArtifactsPanel = ({
   onRequireLogin,
   onCreate,
   onCreateComment,
+  onNotFound,
   error,
 }: ArtifactsPanelProps) => {
-  const queryClient = useQueryClient();
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [url, setUrl] = useState("");
@@ -107,9 +116,6 @@ const ArtifactsPanel = ({
 
   const toggleComments = (artifactId: number) => {
     setOpenComments((prev) => ({ ...prev, [artifactId]: !prev[artifactId] }));
-    if (!openComments[artifactId]) {
-      void queryClient.invalidateQueries({ queryKey: ["artifact-comments", artifactId] });
-    }
   };
 
   return (
@@ -142,6 +148,7 @@ const ArtifactsPanel = ({
                   isAuthed={isAuthed}
                   onRequireLogin={onRequireLogin}
                   onCreateComment={onCreateComment}
+                  onNotFound={onNotFound}
                 />
               ) : null}
             </div>
