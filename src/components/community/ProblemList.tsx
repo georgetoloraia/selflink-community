@@ -43,6 +43,7 @@ const ProblemList = ({ problems, selectedId, onSelect, onAddNew, onRequireLogin,
                   {problem.status ? <span className="status-badge">{problem.status}</span> : null}
                   {typeof problem.likes_count === "number" ? <span>Likes {problem.likes_count}</span> : null}
                   {typeof problem.comments_count === "number" ? <span>Comments {problem.comments_count}</span> : null}
+                  {typeof problem.artifacts_count === "number" ? <span>Artifacts {problem.artifacts_count}</span> : null}
                   {typeof problem.working_count === "number" ? <span>Working {problem.working_count}</span> : null}
                 </div>
               </button>
