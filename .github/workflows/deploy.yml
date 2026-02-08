@@ -31,6 +31,7 @@ jobs:
         run: npm run build
         env:
           VITE_API_BASE_URL: https://api.self-link.com
+          VITE_PUBLIC_BASE: /
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
