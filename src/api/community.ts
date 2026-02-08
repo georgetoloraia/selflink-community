@@ -1,42 +1,60 @@
 import { apiClient } from "./client";
 
 export type Money = { amount: string; currency: string };
-export type UserTiny = { id: number; username: string; avatar_url: string | null };
+export type UserTiny = { id: number; username?: string; avatar_url?: string | null };
 
 export type CommunitySummary = {
-  as_of: string;
-  total_income: Money;
-  contributors_reward: Money;
-  contributors: { count: number };
-  distribution_preview: Array<{ user: UserTiny; amount: string; currency: string }>;
+  as_of?: string;
+  total_income?: Money;
+  contributors_reward?: Money;
+  contributors?: { count: number };
+  distribution_preview?: Array<{ user: UserTiny; amount: string; currency: string }>;
 };
 
 export type ProblemStatus = "open" | "in_progress" | "resolved";
 
 export type Problem = {
   id: number;
-  title: string;
-  description: string;
-  status: ProblemStatus;
-  created_at: string;
-  comments_count: number;
-  likes_count: number;
-  artifacts_count: number;
-  working_count: number;
-  has_liked: boolean;
-  is_working: boolean;
-  working_on_this?: UserTiny[];
+  title?: string;
+  description?: string;
+  status?: ProblemStatus;
+  created_at?: string;
+  updated_at?: string;
+  views_count?: number;
+  last_activity_at?: string;
+  comments_count?: number;
+  likes_count?: number;
+  artifacts_count?: number;
+  working_count?: number;
+  has_liked?: boolean;
+  is_working?: boolean;
+  working_on_this?: Array<{ id?: number; username?: string; avatar_url?: string | null }>;
+  views?: number;
+  last_activity?: string;
+  comments?: number;
+  likes?: number;
+  artifacts?: number;
+  working?: number;
 };
 
-export type Agreement = {
+export type ProblemAgreement = {
   id: number;
-  license_spdx: string;
-  version: string;
-  text: string;
-  is_active: boolean;
+  license_spdx?: string;
+  version?: string;
+  text?: string;
+  is_active?: boolean;
 };
 
-export type AgreementResponse = { agreement: Agreement | null };
+export type Agreement = ProblemAgreement;
+export type AgreementResponse = { agreement: ProblemAgreement | null };
+
+export type ProblemEvent = {
+  id: number;
+  type: string;
+  created_at: string;
+  actor?: UserTiny | null;
+  metadata?: Record<string, unknown> | null;
+};
 
 export type ProblemComment = {
   id: number;
@@ -134,6 +152,11 @@ export const getAgreement = async (id: number) => {
 export const acceptAgreement = async (id: number) => {
   const { data } = await apiClient.post(`problems/${id}/agreement/accept/`);
   return data;
+};
+
+export const listProblemEvents = async (problemId: number) => {
+  const { data } = await apiClient.get(`problems/${problemId}/events/`);
+  return unwrapResults<ProblemEvent>(data);
 };
 
 export const listArtifacts = async (problemId: number) => {

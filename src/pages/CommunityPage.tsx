@@ -66,6 +66,13 @@ const CommunityPage = () => {
     retry: retryNon4xx,
   });
 
+  const eventsQuery = useQuery<communityApi.ProblemEvent[]>({
+    queryKey: ["events", selectedId],
+    queryFn: () => communityApi.listProblemEvents(selectedId as number),
+    enabled: selectedId !== null,
+    retry: retryNon4xx,
+  });
+
   useEffect(() => {
     if (!selectedId && problemsQuery.data && problemsQuery.data.length > 0) {
       const candidate = problemsQuery.data[0].id;
@@ -211,6 +218,7 @@ const CommunityPage = () => {
             : problem
         )
       );
+      void queryClient.invalidateQueries({ queryKey: ["events", data.problem_id] });
     },
   });
 
@@ -232,6 +240,7 @@ const CommunityPage = () => {
             : problem
         )
       );
+      void queryClient.invalidateQueries({ queryKey: ["events", data.problem_id] });
     },
   });
 
@@ -239,6 +248,9 @@ const CommunityPage = () => {
     mutationFn: ({ id, body }: { id: number; body: string }) => communityApi.createProblemComment(id, body),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["problem-comments", selectedId] });
+      if (selectedId !== null) {
+        void queryClient.invalidateQueries({ queryKey: ["events", selectedId] });
+      }
     },
   });
 
@@ -248,6 +260,9 @@ const CommunityPage = () => {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["artifacts", selectedId] });
       void queryClient.invalidateQueries({ queryKey: ["problems"] });
+      if (selectedId !== null) {
+        void queryClient.invalidateQueries({ queryKey: ["events", selectedId] });
+      }
     },
   });
 
@@ -264,6 +279,7 @@ const CommunityPage = () => {
             : comment
         )
       );
+      void queryClient.invalidateQueries({ queryKey: ["events", data.problem_id] });
     },
   });
 
@@ -271,6 +287,9 @@ const CommunityPage = () => {
     mutationFn: ({ id, body }: { id: number; body: string }) => communityApi.createArtifactComment(id, body),
     onSuccess: (_data, variables) => {
       void queryClient.invalidateQueries({ queryKey: ["artifact-comments", variables.id] });
+      if (selectedId !== null) {
+        void queryClient.invalidateQueries({ queryKey: ["events", selectedId] });
+      }
     },
   });
 
@@ -370,18 +389,18 @@ const CommunityPage = () => {
               comments: commentsQuery.data ?? [],
               onSubmit: (body) =>
                 runGuarded(() => createCommentMutation.mutateAsync({ id: selectedId as number, body }), selectedId),
-            onToggleLike: (commentId, hasLiked) => {
-              if (selectedId === null) return;
-              runGuarded(
-                () =>
-                  toggleCommentLikeMutation.mutateAsync({
-                    problemId: selectedId as number,
-                    commentId,
-                    hasLiked,
-                  }),
-                selectedId
-              );
-            },
+              onToggleLike: (commentId, hasLiked) => {
+                if (selectedId === null) return;
+                runGuarded(
+                  () =>
+                    toggleCommentLikeMutation.mutateAsync({
+                      problemId: selectedId as number,
+                      commentId,
+                      hasLiked,
+                    }),
+                  selectedId
+                );
+              },
               onRequireLogin: () => setLoginOpen(true),
               isAuthed,
               isLoading: commentsQuery.isLoading,
@@ -402,6 +421,11 @@ const CommunityPage = () => {
               onCreateComment: (artifactId, body) =>
                 runGuarded(() => createArtifactCommentMutation.mutateAsync({ id: artifactId, body }), selectedId),
               error: artifactsQuery.isError ? "Unable to load artifacts." : null,
+            }}
+            eventsProps={{
+              events: eventsQuery.data ?? [],
+              isLoading: eventsQuery.isLoading,
+              error: eventsQuery.isError ? "Unable to load activity." : null,
             }}
           />
         </div>
