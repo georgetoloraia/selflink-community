@@ -42,8 +42,12 @@ export const apiClient = axios.create({
 });
 
 apiClient.interceptors.request.use((config) => {
-  if (import.meta.env.DEV && config.baseURL?.replace(/\/$/, "") === base.replace(/\/$/, "")) {
-    throw new Error("API baseURL resolved to root; expected /api/v1/community/");
+  if (
+    import.meta.env.DEV &&
+    config.baseURL &&
+    !config.baseURL.includes("/api/v1/community/")
+  ) {
+    throw new Error("API baseURL missing /api/v1/community/");
   }
   return config;
 });
