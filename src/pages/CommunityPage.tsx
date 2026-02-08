@@ -6,7 +6,7 @@ import AgreementModal from "../components/modals/AgreementModal";
 import NewProblemModal from "../components/community/NewProblemModal";
 import ProblemList from "../components/community/ProblemList";
 import ProblemDetail from "../components/community/ProblemDetail";
-import { getErrorDetail, isAgreementRequired } from "../api/client";
+import { getErrorDetail, getStatus, isAgreementRequired } from "../api/client";
 import * as communityApi from "../api/community";
 import { useAuth } from "../auth/useAuth";
 
@@ -20,6 +20,7 @@ const CommunityPage = () => {
   const [agreementProblemId, setAgreementProblemId] = useState<number | null>(null);
   const [newProblemOpen, setNewProblemOpen] = useState(false);
   const [inlineError, setInlineError] = useState<string | null>(null);
+  const [staleNotice, setStaleNotice] = useState<string | null>(null);
 
   const pendingActionRef = useRef<{ action: () => Promise<void>; consumed: boolean } | null>(null);
 
@@ -51,8 +52,6 @@ const CommunityPage = () => {
     enabled: selectedId !== null,
   });
 
-  const getStatus = (error: unknown) => (error as any)?.response?.status;
-
   useEffect(() => {
     if (!selectedId && problemsQuery.data && problemsQuery.data.length > 0) {
       setSelectedId(problemsQuery.data[0].id);
@@ -60,8 +59,19 @@ const CommunityPage = () => {
   }, [problemsQuery.data, selectedId]);
 
   useEffect(() => {
+    if (!problemsQuery.data) return;
+    if (selectedId === null) return;
+    const exists = problemsQuery.data.some((problem) => problem.id === selectedId);
+    if (!exists) {
+      setSelectedId(problemsQuery.data[0]?.id ?? null);
+      setStaleNotice("This problem no longer exists. Select another.");
+    }
+  }, [problemsQuery.data, selectedId]);
+
+  useEffect(() => {
     if (problemQuery.isError && getStatus(problemQuery.error) === 404) {
       setSelectedId(null);
+      setStaleNotice("This problem no longer exists. Select another.");
       void queryClient.invalidateQueries({ queryKey: ["problems"] });
     }
   }, [problemQuery.isError, problemQuery.error, queryClient]);
@@ -69,6 +79,7 @@ const CommunityPage = () => {
   useEffect(() => {
     if (commentsQuery.isError && getStatus(commentsQuery.error) === 404) {
       setSelectedId(null);
+      setStaleNotice("This problem no longer exists. Select another.");
       void queryClient.invalidateQueries({ queryKey: ["problems"] });
     }
   }, [commentsQuery.isError, commentsQuery.error, queryClient]);
@@ -76,6 +87,7 @@ const CommunityPage = () => {
   useEffect(() => {
     if (artifactsQuery.isError && getStatus(artifactsQuery.error) === 404) {
       setSelectedId(null);
+      setStaleNotice("This problem no longer exists. Select another.");
       void queryClient.invalidateQueries({ queryKey: ["problems"] });
     }
   }, [artifactsQuery.isError, artifactsQuery.error, queryClient]);
@@ -269,62 +281,65 @@ const CommunityPage = () => {
           onRequireLogin={() => setLoginOpen(true)}
           isAuthed={isAuthed}
         />
-        <ProblemDetail
-          problem={selectedProblem}
-          onLike={() =>
-            runGuarded(
-              () =>
-                likeMutation.mutateAsync({
-                  id: selectedId as number,
-                  hasLiked: Boolean(selectedProblem?.has_liked),
-                }),
-              selectedId
-            )
-          }
-          onToggleWork={(working) =>
-            runGuarded(
-              () => workMutation.mutateAsync({ id: selectedId as number, working }),
-              selectedId
-            )
-          }
-          onRequireLogin={() => setLoginOpen(true)}
-          isAuthed={isAuthed}
-          commentsProps={{
-            comments: commentsQuery.data ?? [],
-            onSubmit: (body) =>
-              runGuarded(() => createCommentMutation.mutateAsync({ id: selectedId as number, body }), selectedId),
-            onToggleLike: (commentId, hasLiked) =>
+        <div className="detail-stack">
+          {staleNotice ? <div className="notice-banner">{staleNotice}</div> : null}
+          <ProblemDetail
+            problem={selectedProblem}
+            onLike={() =>
               runGuarded(
                 () =>
-                  toggleCommentLikeMutation.mutateAsync({
-                    problemId: selectedId as number,
-                    commentId,
-                    hasLiked,
+                  likeMutation.mutateAsync({
+                    id: selectedId as number,
+                    hasLiked: Boolean(selectedProblem?.has_liked),
                   }),
                 selectedId
-              ),
-            onRequireLogin: () => setLoginOpen(true),
-            isAuthed,
-            isLoading: commentsQuery.isLoading,
-            error: commentsQuery.isError ? "Unable to load comments." : null,
-          }}
-          artifactsProps={{
-            problemId: selectedId,
-            artifacts: artifactsQuery.data ?? [],
-            isLoading: artifactsQuery.isLoading,
-            isAuthed,
-            onRequireLogin: () => setLoginOpen(true),
-            onNotFound: handleNotFound,
-            onCreate: (payload) =>
+              )
+            }
+            onToggleWork={(working) =>
               runGuarded(
-                () => createArtifactMutation.mutateAsync({ id: selectedId as number, payload }),
+                () => workMutation.mutateAsync({ id: selectedId as number, working }),
                 selectedId
-              ),
-            onCreateComment: (artifactId, body) =>
-              runGuarded(() => createArtifactCommentMutation.mutateAsync({ id: artifactId, body }), selectedId),
-            error: artifactsQuery.isError ? "Unable to load artifacts." : null,
-          }}
-        />
+              )
+            }
+            onRequireLogin={() => setLoginOpen(true)}
+            isAuthed={isAuthed}
+            commentsProps={{
+              comments: commentsQuery.data ?? [],
+              onSubmit: (body) =>
+                runGuarded(() => createCommentMutation.mutateAsync({ id: selectedId as number, body }), selectedId),
+              onToggleLike: (commentId, hasLiked) =>
+                runGuarded(
+                  () =>
+                    toggleCommentLikeMutation.mutateAsync({
+                      problemId: selectedId as number,
+                      commentId,
+                      hasLiked,
+                    }),
+                  selectedId
+                ),
+              onRequireLogin: () => setLoginOpen(true),
+              isAuthed,
+              isLoading: commentsQuery.isLoading,
+              error: commentsQuery.isError ? "Unable to load comments." : null,
+            }}
+            artifactsProps={{
+              problemId: selectedId,
+              artifacts: artifactsQuery.data ?? [],
+              isLoading: artifactsQuery.isLoading,
+              isAuthed,
+              onRequireLogin: () => setLoginOpen(true),
+              onNotFound: handleNotFound,
+              onCreate: (payload) =>
+                runGuarded(
+                  () => createArtifactMutation.mutateAsync({ id: selectedId as number, payload }),
+                  selectedId
+                ),
+              onCreateComment: (artifactId, body) =>
+                runGuarded(() => createArtifactCommentMutation.mutateAsync({ id: artifactId, body }), selectedId),
+              error: artifactsQuery.isError ? "Unable to load artifacts." : null,
+            }}
+          />
+        </div>
       </div>
 
       <LoginModal isOpen={loginOpen} onClose={() => setLoginOpen(false)} />
