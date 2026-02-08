@@ -48,10 +48,11 @@ const AgreementModal = ({ isOpen, problemId, onClose, onAccepted }: AgreementMod
           ) : (
             <>
               <div className="agreement-meta">
-                <div>License: {data?.license_spdx ?? "MIT"}</div>
-                <div>Version: {data?.version ?? ""}</div>
+                <div>Agreement</div>
               </div>
-              <div className="agreement-text">{data?.text ?? ""}</div>
+              <div className="agreement-text">
+                {data?.agreement?.text ?? "Agreement text is unavailable."}
+              </div>
             </>
           )}
           <div className="modal-actions">

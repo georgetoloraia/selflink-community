@@ -9,7 +9,7 @@ export type ArtifactsPanelProps = {
   isLoading: boolean;
   isAuthed: boolean;
   onRequireLogin: () => void;
-  onCreate: (payload: { type?: string; title: string; description?: string; url?: string }) => void;
+  onCreate: (payload: { title: string; description?: string; url?: string }) => void;
   onCreateComment: (artifactId: number, body: string) => void;
   error?: string | null;
 };
@@ -51,9 +51,7 @@ const ArtifactComments = ({
         ) : (
           (commentsQuery.data ?? []).map((comment) => (
             <div key={comment.id} className="comment-item">
-              <div className="comment-author">
-                {comment.author?.name || comment.author?.username || comment.author?.handle || "Anonymous"}
-              </div>
+              <div className="comment-author">{comment.user?.username ?? "Anonymous"}</div>
               <div className="comment-body">{comment.body}</div>
             </div>
           ))
@@ -85,7 +83,6 @@ const ArtifactsPanel = ({
   error,
 }: ArtifactsPanelProps) => {
   const queryClient = useQueryClient();
-  const [type, setType] = useState("code");
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [url, setUrl] = useState("");
@@ -99,7 +96,6 @@ const ArtifactsPanel = ({
     }
     if (!title.trim()) return;
     onCreate({
-      type: type.trim(),
       title: title.trim(),
       description: body.trim() || undefined,
       url: url.trim() || undefined,
@@ -131,13 +127,10 @@ const ArtifactsPanel = ({
             <div key={artifact.id} className="artifact-card">
               <div className="artifact-title-row">
                 <div className="artifact-title">{artifact.title ?? "Untitled"}</div>
-                {artifact.type ? <span className="artifact-type">{artifact.type}</span> : null}
               </div>
               {artifact.url ? <div className="artifact-url">{artifact.url}</div> : null}
               <div className="artifact-meta">
-                <span>
-                  {artifact.created_by?.username || artifact.created_by?.handle || artifact.created_by?.name || "Unknown"}
-                </span>
+                <span>{artifact.user?.username ?? "Unknown"}</span>
                 {artifact.created_at ? <span>{artifact.created_at}</span> : null}
               </div>
               <button className="link-btn" onClick={() => toggleComments(artifact.id)}>
@@ -157,14 +150,6 @@ const ArtifactsPanel = ({
       </div>
       <form className="artifact-form" onSubmit={handleCreateArtifact}>
         <h4>Add Artifact</h4>
-        <label className="field">
-          <span>Type</span>
-          <select value={type} onChange={(e) => setType(e.target.value)}>
-            <option value="code">Code</option>
-            <option value="design">Design</option>
-            <option value="doc">Doc</option>
-          </select>
-        </label>
         <label className="field">
           <span>Title</span>
           <input

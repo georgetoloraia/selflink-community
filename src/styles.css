@@ -265,12 +265,6 @@ body {
   font-weight: 600;
 }
 
-.artifact-type {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #6f7a88;
-}
 
 .artifact-url {
   font-size: 12px;
