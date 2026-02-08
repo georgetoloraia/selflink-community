@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import * as communityApi from "../../api/community";
@@ -29,16 +29,17 @@ const ArtifactComments = ({
   onNotFound: () => void;
 }) => {
   const [body, setBody] = useState("");
-  const commentsQuery = useQuery({
+  const commentsQuery = useQuery<communityApi.Comment[]>({
     queryKey: ["artifact-comments", artifactId],
     queryFn: () => communityApi.listArtifactComments(artifactId),
-    onError: (error: unknown) => {
-      const status = (error as any)?.response?.status;
-      if (status === 404) {
-        onNotFound();
-      }
-    },
   });
+
+  useEffect(() => {
+    const status = (commentsQuery.error as any)?.response?.status;
+    if (commentsQuery.isError && status === 404) {
+      onNotFound();
+    }
+  }, [commentsQuery.isError, commentsQuery.error, onNotFound]);
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();

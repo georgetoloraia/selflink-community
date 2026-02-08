@@ -23,60 +23,62 @@ const CommunityPage = () => {
 
   const pendingActionRef = useRef<{ action: () => Promise<void>; consumed: boolean } | null>(null);
 
-  const summaryQuery = useQuery({
+  const summaryQuery = useQuery<communityApi.Summary>({
     queryKey: ["summary"],
     queryFn: communityApi.getSummary,
   });
 
-  const problemsQuery = useQuery({
+  const problemsQuery = useQuery<communityApi.Problem[]>({
     queryKey: ["problems"],
     queryFn: () => communityApi.listProblems(),
   });
 
-  const problemQuery = useQuery({
+  const problemQuery = useQuery<communityApi.Problem>({
     queryKey: ["problem", selectedId],
     queryFn: () => communityApi.getProblem(selectedId as number),
     enabled: selectedId !== null,
-    onError: (error: unknown) => {
-      const status = (error as any)?.response?.status;
-      if (status === 404) {
-        setSelectedId(null);
-        void queryClient.invalidateQueries({ queryKey: ["problems"] });
-      }
-    },
   });
 
-  const commentsQuery = useQuery({
+  const commentsQuery = useQuery<communityApi.Comment[]>({
     queryKey: ["problem-comments", selectedId],
     queryFn: () => communityApi.listProblemComments(selectedId as number),
     enabled: selectedId !== null,
-    onError: (error: unknown) => {
-      const status = (error as any)?.response?.status;
-      if (status === 404) {
-        setSelectedId(null);
-        void queryClient.invalidateQueries({ queryKey: ["problems"] });
-      }
-    },
   });
 
-  const artifactsQuery = useQuery({
+  const artifactsQuery = useQuery<communityApi.Artifact[]>({
     queryKey: ["artifacts", selectedId],
     queryFn: () => communityApi.listArtifacts(selectedId as number),
     enabled: selectedId !== null,
-    onError: (error: unknown) => {
-      const status = (error as any)?.response?.status;
-      if (status === 404) {
-        setSelectedId(null);
-        void queryClient.invalidateQueries({ queryKey: ["problems"] });
-      }
-    },
   });
+
+  const getStatus = (error: unknown) => (error as any)?.response?.status;
 
   useEffect(() => {
     if (!selectedId && problemsQuery.data && problemsQuery.data.length > 0) {
       setSelectedId(problemsQuery.data[0].id);
     }
   }, [problemsQuery.data, selectedId]);
+
+  useEffect(() => {
+    if (problemQuery.isError && getStatus(problemQuery.error) === 404) {
+      setSelectedId(null);
+      void queryClient.invalidateQueries({ queryKey: ["problems"] });
+    }
+  }, [problemQuery.isError, problemQuery.error, queryClient]);
+
+  useEffect(() => {
+    if (commentsQuery.isError && getStatus(commentsQuery.error) === 404) {
+      setSelectedId(null);
+      void queryClient.invalidateQueries({ queryKey: ["problems"] });
+    }
+  }, [commentsQuery.isError, commentsQuery.error, queryClient]);
+
+  useEffect(() => {
+    if (artifactsQuery.isError && getStatus(artifactsQuery.error) === 404) {
+      setSelectedId(null);
+      void queryClient.invalidateQueries({ queryKey: ["problems"] });
+    }
+  }, [artifactsQuery.isError, artifactsQuery.error, queryClient]);
 
   useEffect(() => {
     const handler = () => setLoginOpen(true);
