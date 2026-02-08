@@ -35,6 +35,7 @@ if (!base) {
 
 const apiBase = `${base.replace(/\/$/, "")}/api/v1/community/`;
 console.log("Community API baseURL:", apiBase);
+console.log("Community API health check:", `${apiBase}summary/`);
 
 export const apiClient = axios.create({
   baseURL: apiBase,
