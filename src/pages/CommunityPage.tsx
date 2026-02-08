@@ -6,7 +6,7 @@ import AgreementModal from "../components/modals/AgreementModal";
 import NewProblemModal from "../components/community/NewProblemModal";
 import ProblemList from "../components/community/ProblemList";
 import ProblemDetail from "../components/community/ProblemDetail";
-import { getErrorDetail, getStatus, isAgreementRequired } from "../api/client";
+import { getErrorDetail, getStatus, isAgreementRequired, isNotFound } from "../api/client";
 import * as communityApi from "../api/community";
 import { useAuth } from "../auth/useAuth";
 
@@ -166,6 +166,13 @@ const CommunityPage = () => {
     } catch (error) {
       if (isAgreementRequired(error)) {
         setAgreementFor(problemId ?? selectedId ?? null, action);
+        return;
+      }
+      if (isNotFound(error)) {
+        if (selectedId !== null) {
+          void queryClient.invalidateQueries({ queryKey: ["problem-comments", selectedId] });
+        }
+        setInlineError("That comment no longer exists. Refreshed.");
         return;
       }
       if (getStatus(error) === 401) {
@@ -354,16 +361,18 @@ const CommunityPage = () => {
               comments: commentsQuery.data ?? [],
               onSubmit: (body) =>
                 runGuarded(() => createCommentMutation.mutateAsync({ id: selectedId as number, body }), selectedId),
-              onToggleLike: (commentId, hasLiked) =>
-                runGuarded(
-                  () =>
-                    toggleCommentLikeMutation.mutateAsync({
-                      problemId: selectedId as number,
-                      commentId,
-                      hasLiked,
-                    }),
-                  selectedId
-                ),
+            onToggleLike: (commentId, hasLiked) => {
+              if (selectedId === null) return;
+              runGuarded(
+                () =>
+                  toggleCommentLikeMutation.mutateAsync({
+                    problemId: selectedId as number,
+                    commentId,
+                    hasLiked,
+                  }),
+                selectedId
+              );
+            },
               onRequireLogin: () => setLoginOpen(true),
               isAuthed,
               isLoading: commentsQuery.isLoading,
