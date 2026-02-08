@@ -23,7 +23,7 @@ const CommunityPage = () => {
 
   const pendingActionRef = useRef<{ action: () => Promise<void>; consumed: boolean } | null>(null);
 
-  const summaryQuery = useQuery<communityApi.Summary>({
+  const summaryQuery = useQuery<communityApi.CommunitySummary>({
     queryKey: ["summary"],
     queryFn: communityApi.getSummary,
   });
@@ -39,13 +39,13 @@ const CommunityPage = () => {
     enabled: selectedId !== null,
   });
 
-  const commentsQuery = useQuery<communityApi.Comment[]>({
+  const commentsQuery = useQuery<communityApi.ProblemComment[]>({
     queryKey: ["problem-comments", selectedId],
     queryFn: () => communityApi.listProblemComments(selectedId as number),
     enabled: selectedId !== null,
   });
 
-  const artifactsQuery = useQuery<communityApi.Artifact[]>({
+  const artifactsQuery = useQuery<communityApi.WorkArtifact[]>({
     queryKey: ["artifacts", selectedId],
     queryFn: () => communityApi.listArtifacts(selectedId as number),
     enabled: selectedId !== null,
@@ -128,19 +128,44 @@ const CommunityPage = () => {
   };
 
   const likeMutation = useMutation({
-    mutationFn: (id: number) => communityApi.likeProblem(id),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["problem", selectedId] });
-      void queryClient.invalidateQueries({ queryKey: ["problems"] });
+    mutationFn: ({ id, hasLiked }: { id: number; hasLiked: boolean }) =>
+      hasLiked ? communityApi.unlikeProblem(id) : communityApi.likeProblem(id),
+    onSuccess: (data) => {
+      if (selectedId !== null) {
+        queryClient.setQueryData<communityApi.Problem>(["problem", selectedId], (prev) =>
+          prev
+            ? { ...prev, has_liked: data.has_liked, likes_count: data.likes_count }
+            : prev
+        );
+      }
+      queryClient.setQueryData<communityApi.Problem[]>(["problems"], (prev) =>
+        (prev ?? []).map((problem) =>
+          problem.id === data.problem_id
+            ? { ...problem, has_liked: data.has_liked, likes_count: data.likes_count }
+            : problem
+        )
+      );
     },
   });
 
   const workMutation = useMutation({
     mutationFn: ({ id, working }: { id: number; working: boolean }) =>
       working ? communityApi.unworkOnProblem(id) : communityApi.workOnProblem(id),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["problem", selectedId] });
-      void queryClient.invalidateQueries({ queryKey: ["problems"] });
+    onSuccess: (data) => {
+      if (selectedId !== null) {
+        queryClient.setQueryData<communityApi.Problem>(["problem", selectedId], (prev) =>
+          prev
+            ? { ...prev, is_working: data.is_working, working_count: data.working_count }
+            : prev
+        );
+      }
+      queryClient.setQueryData<communityApi.Problem[]>(["problems"], (prev) =>
+        (prev ?? []).map((problem) =>
+          problem.id === data.problem_id
+            ? { ...problem, is_working: data.is_working, working_count: data.working_count }
+            : problem
+        )
+      );
     },
   });
 
@@ -156,6 +181,23 @@ const CommunityPage = () => {
       communityApi.createArtifact(id, payload),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["artifacts", selectedId] });
+      void queryClient.invalidateQueries({ queryKey: ["problems"] });
+    },
+  });
+
+  const toggleCommentLikeMutation = useMutation({
+    mutationFn: ({ problemId, commentId, hasLiked }: { problemId: number; commentId: number; hasLiked: boolean }) =>
+      hasLiked
+        ? communityApi.unlikeProblemComment(problemId, commentId)
+        : communityApi.likeProblemComment(problemId, commentId),
+    onSuccess: (data) => {
+      queryClient.setQueryData<communityApi.ProblemComment[]>(["problem-comments", selectedId], (prev) =>
+        (prev ?? []).map((comment) =>
+          comment.id === data.comment_id
+            ? { ...comment, has_liked: data.has_liked, likes_count: data.likes_count }
+            : comment
+        )
+      );
     },
   });
 
@@ -229,7 +271,16 @@ const CommunityPage = () => {
         />
         <ProblemDetail
           problem={selectedProblem}
-          onLike={() => runGuarded(() => likeMutation.mutateAsync(selectedId as number), selectedId)}
+          onLike={() =>
+            runGuarded(
+              () =>
+                likeMutation.mutateAsync({
+                  id: selectedId as number,
+                  hasLiked: Boolean(selectedProblem?.has_liked),
+                }),
+              selectedId
+            )
+          }
           onToggleWork={(working) =>
             runGuarded(
               () => workMutation.mutateAsync({ id: selectedId as number, working }),
@@ -242,6 +293,16 @@ const CommunityPage = () => {
             comments: commentsQuery.data ?? [],
             onSubmit: (body) =>
               runGuarded(() => createCommentMutation.mutateAsync({ id: selectedId as number, body }), selectedId),
+            onToggleLike: (commentId, hasLiked) =>
+              runGuarded(
+                () =>
+                  toggleCommentLikeMutation.mutateAsync({
+                    problemId: selectedId as number,
+                    commentId,
+                    hasLiked,
+                  }),
+                selectedId
+              ),
             onRequireLogin: () => setLoginOpen(true),
             isAuthed,
             isLoading: commentsQuery.isLoading,

@@ -5,7 +5,7 @@ import * as communityApi from "../../api/community";
 
 export type ArtifactsPanelProps = {
   problemId: number | null;
-  artifacts: communityApi.Artifact[];
+  artifacts: communityApi.WorkArtifact[];
   isLoading: boolean;
   isAuthed: boolean;
   onRequireLogin: () => void;
@@ -29,7 +29,7 @@ const ArtifactComments = ({
   onNotFound: () => void;
 }) => {
   const [body, setBody] = useState("");
-  const commentsQuery = useQuery<communityApi.Comment[]>({
+  const commentsQuery = useQuery<communityApi.ProblemComment[]>({
     queryKey: ["artifact-comments", artifactId],
     queryFn: () => communityApi.listArtifactComments(artifactId),
   });

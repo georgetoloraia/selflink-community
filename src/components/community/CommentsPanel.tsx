@@ -1,11 +1,12 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
-import type { Comment } from "../../api/community";
+import type { ProblemComment } from "../../api/community";
 
 type CommentsPanelProps = {
   title?: string;
-  comments: Comment[];
+  comments: ProblemComment[];
   onSubmit: (body: string) => void;
+  onToggleLike: (commentId: number, hasLiked: boolean) => void;
   onRequireLogin: () => void;
   isAuthed: boolean;
   isLoading: boolean;
@@ -16,6 +17,7 @@ const CommentsPanel = ({
   title = "Discussion",
   comments,
   onSubmit,
+  onToggleLike,
   onRequireLogin,
   isAuthed,
   isLoading,
@@ -49,6 +51,21 @@ const CommentsPanel = ({
             <div key={comment.id} className="comment-item">
               <div className="comment-author">{comment.user?.username ?? "Anonymous"}</div>
               <div className="comment-body">{comment.body}</div>
+              <div className="comment-actions">
+                <button
+                  className="link-btn"
+                  type="button"
+                  onClick={() => {
+                    if (!isAuthed) {
+                      onRequireLogin();
+                      return;
+                    }
+                    onToggleLike(comment.id, comment.has_liked);
+                  }}
+                >
+                  {comment.has_liked ? "Unlike" : "Like"} ({comment.likes_count})
+                </button>
+              </div>
             </div>
           ))
         )}
