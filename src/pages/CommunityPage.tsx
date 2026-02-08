@@ -6,7 +6,7 @@ import AgreementModal from "../components/modals/AgreementModal";
 import NewProblemModal from "../components/community/NewProblemModal";
 import ProblemList from "../components/community/ProblemList";
 import ProblemDetail from "../components/community/ProblemDetail";
-import { getErrorDetail, getStatus, isAgreementRequired, isNotFound } from "../api/client";
+import { getErrorDetail, getStatus, isAgreementRequired, isNetworkError, isNotFound } from "../api/client";
 import * as communityApi from "../api/community";
 import { useAuth } from "../auth/useAuth";
 
@@ -168,11 +168,20 @@ const CommunityPage = () => {
         setAgreementFor(problemId ?? selectedId ?? null, action);
         return;
       }
+      if (isNetworkError(error)) {
+        setInlineError(
+          "Action blocked by CORS — backend needs CORS for this origin (https://community.self-link.com)."
+        );
+        return;
+      }
       if (isNotFound(error)) {
         if (selectedId !== null) {
           void queryClient.invalidateQueries({ queryKey: ["problem-comments", selectedId] });
+          void queryClient.invalidateQueries({ queryKey: ["artifacts", selectedId] });
+          void queryClient.invalidateQueries({ queryKey: ["problem", selectedId] });
         }
-        setInlineError("That comment no longer exists. Refreshed.");
+        void queryClient.invalidateQueries({ queryKey: ["problems"] });
+        setInlineError("Item no longer exists. Refreshed.");
         return;
       }
       if (getStatus(error) === 401) {

@@ -17,6 +17,7 @@ const AgreementModal = ({ isOpen, problemId, onClose, onAccepted }: AgreementMod
     enabled,
   });
 
+  const hasAgreement = Boolean(data?.agreement);
   const acceptMutation = useMutation({
     mutationFn: () => communityApi.acceptAgreement(problemId as number),
     onSuccess: () => {
@@ -52,7 +53,8 @@ const AgreementModal = ({ isOpen, problemId, onClose, onAccepted }: AgreementMod
                 <div>Version: {data?.agreement?.version ?? ""}</div>
               </div>
               <div className="agreement-text">
-                {data?.agreement?.text ?? "Agreement text is unavailable."}
+                {data?.agreement?.text ??
+                  "No active agreement is configured for this problem. Ask an admin to attach MIT text."}
               </div>
             </>
           )}
@@ -64,7 +66,7 @@ const AgreementModal = ({ isOpen, problemId, onClose, onAccepted }: AgreementMod
               type="button"
               className="btn"
               onClick={() => acceptMutation.mutate()}
-              disabled={acceptMutation.isPending}
+              disabled={acceptMutation.isPending || !hasAgreement}
             >
               {acceptMutation.isPending ? "Accepting..." : "Accept MIT"}
             </button>
