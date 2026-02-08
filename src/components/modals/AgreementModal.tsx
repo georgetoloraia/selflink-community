@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as communityApi from "../../api/community";
 
 type AgreementModalProps = {
@@ -10,6 +10,7 @@ type AgreementModalProps = {
 };
 
 const AgreementModal = ({ isOpen, problemId, onClose, onAccepted }: AgreementModalProps) => {
+  const queryClient = useQueryClient();
   const enabled = isOpen && problemId !== null;
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["agreement", problemId],
@@ -21,6 +22,11 @@ const AgreementModal = ({ isOpen, problemId, onClose, onAccepted }: AgreementMod
   const acceptMutation = useMutation({
     mutationFn: () => communityApi.acceptAgreement(problemId as number),
     onSuccess: () => {
+      if (problemId !== null) {
+        void queryClient.invalidateQueries({ queryKey: ["problem", problemId] });
+        void queryClient.invalidateQueries({ queryKey: ["events", problemId] });
+      }
+      void queryClient.invalidateQueries({ queryKey: ["problems"] });
       onAccepted();
       onClose();
     },
@@ -50,11 +56,10 @@ const AgreementModal = ({ isOpen, problemId, onClose, onAccepted }: AgreementMod
             <>
               <div className="agreement-meta">
                 <div>License: {data?.agreement?.license_spdx ?? "MIT"}</div>
-                <div>Version: {data?.agreement?.version ?? ""}</div>
+                <div>Version: {data?.agreement?.version ?? "1.0"}</div>
               </div>
               <div className="agreement-text">
-                {data?.agreement?.text ??
-                  "No active agreement is configured for this problem. Ask an admin to attach MIT text."}
+                {data?.agreement?.text ?? "Agreement unavailable. Please try again."}
               </div>
             </>
           )}
