@@ -7,12 +7,11 @@
     <title>SelfLink Community</title>
     <script>
       (function () {
-        var params = new URLSearchParams(window.location.search);
-        var redirect = params.get("redirect");
-        if (!redirect) return;
         try {
-          var decoded = decodeURIComponent(redirect);
-          window.history.replaceState(null, "", decoded);
+          var target = sessionStorage.getItem("gh-pages-redirect");
+          if (!target) return;
+          sessionStorage.removeItem("gh-pages-redirect");
+          window.history.replaceState(null, "", target);
         } catch (error) {
           window.history.replaceState(null, "", "/selflink-community/");
         }
