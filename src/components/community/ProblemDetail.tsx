@@ -2,6 +2,7 @@ import type { Problem } from "../../api/community";
 import CommentsPanel from "./CommentsPanel";
 import ArtifactsPanel from "./ArtifactsPanel";
 import ActivityPanel from "./ActivityPanel";
+import Markdown from "../Markdown/Markdown";
 
 export type ProblemDetailProps = {
   problem: Problem | null;
@@ -87,7 +88,10 @@ const ProblemDetail = ({
           </button>
         </div>
       </div>
-      <p className="problem-description">{problem.description ?? "No description provided."}</p>
+      <Markdown
+        className="problem-description"
+        value={problem.description ?? "No description provided."}
+      />
       <div className="working-row">
         {workingList.length > 0 ? (
           <div className="working-list">

@@ -173,8 +173,81 @@ body {
 }
 
 .problem-description {
+  color: #3f4a59;
+  line-height: 1.65;
+  max-width: 72ch;
+  margin: 12px auto 16px;
+}
+
+.markdown-render p {
+  margin: 0 0 12px;
+}
+
+.markdown-render p:last-child {
+  margin-bottom: 0;
+}
+
+.markdown-render ul,
+.markdown-render ol {
+  margin: 0 0 12px;
+  padding-left: 22px;
+}
+
+.markdown-render li {
+  margin: 4px 0;
+}
+
+.markdown-render a {
+  color: #2f5c8c;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.markdown-inline-code {
+  padding: 1px 5px;
+  border-radius: 6px;
+  background: #f2efe9;
+  border: 1px solid #e5dfd6;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.92em;
+  color: #2f3846;
+}
+
+.markdown-code-block {
+  margin: 12px 0 16px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #f4f1ec;
+  border: 1px solid #e6e0d8;
+  overflow-x: auto;
+}
+
+.markdown-code-block code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.92em;
+  color: #2e3642;
+}
+
+.markdown-render table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 0 12px;
+  font-size: 0.95em;
+}
+
+.markdown-render th,
+.markdown-render td {
+  border: 1px solid #e6e0d8;
+  padding: 8px 10px;
+  text-align: left;
+}
+
+.markdown-render blockquote {
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  border-left: 3px solid #e0d9cf;
+  background: #faf8f4;
   color: #4a5565;
-  line-height: 1.6;
 }
 
 .working-row {
