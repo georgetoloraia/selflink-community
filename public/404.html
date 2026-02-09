@@ -16,8 +16,13 @@
           l.replace(base + "/");
           return;
         }
-        var redirect = base + "/?redirect=" + encodeURIComponent(l.pathname + l.search + l.hash);
-        l.replace(redirect);
+        var target = l.pathname + l.search + l.hash;
+        try {
+          sessionStorage.setItem("gh-pages-redirect", target);
+        } catch (e) {
+          // ignore storage errors
+        }
+        l.replace(base + "/");
       })();
     </script>
   </head>
