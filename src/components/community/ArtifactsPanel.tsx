@@ -69,6 +69,7 @@ const ArtifactComments = ({
       </div>
       <form className="comment-form" onSubmit={handleSubmit}>
         <textarea
+          name={`artifact-comment-${artifactId}`}
           rows={3}
           placeholder={isAuthed ? "Add a comment" : "Log in to comment"}
           value={body}
@@ -161,6 +162,7 @@ const ArtifactsPanel = ({
         <label className="field">
           <span>Title</span>
           <input
+            name="artifact-title"
             placeholder={isAuthed ? "Title" : "Log in to add"}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -169,6 +171,7 @@ const ArtifactsPanel = ({
         <label className="field">
           <span>Body</span>
           <textarea
+            name="artifact-body"
             rows={3}
             placeholder="Body (optional)"
             value={body}
@@ -177,7 +180,7 @@ const ArtifactsPanel = ({
         </label>
         <label className="field">
           <span>URL</span>
-          <input placeholder="URL (optional)" value={url} onChange={(e) => setUrl(e.target.value)} />
+          <input name="artifact-url" placeholder="URL (optional)" value={url} onChange={(e) => setUrl(e.target.value)} />
         </label>
         <button className="btn secondary" type="submit">
           Add Artifact

@@ -50,11 +50,16 @@ const NewProblemModal = ({ isOpen, onClose, onCreated, onError }: NewProblemModa
         <form className="modal-body" onSubmit={handleSubmit}>
           <label className="field">
             <span>Title</span>
-            <input value={title} onChange={(e) => setTitle(e.target.value)} required />
+            <input name="problem-title" value={title} onChange={(e) => setTitle(e.target.value)} required />
           </label>
           <label className="field">
             <span>Description</span>
-            <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} />
+            <textarea
+              name="problem-description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={4}
+            />
           </label>
           <div className="modal-actions">
             <button type="button" className="btn secondary" onClick={onClose}>

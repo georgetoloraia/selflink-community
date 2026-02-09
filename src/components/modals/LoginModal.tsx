@@ -49,11 +49,17 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
         <form onSubmit={handleSubmit} className="modal-body">
           <label className="field">
             <span>Username</span>
-            <input value={username} onChange={(e) => setUsername(e.target.value)} required />
+            <input name="username" value={username} onChange={(e) => setUsername(e.target.value)} required />
           </label>
           <label className="field">
             <span>Password</span>
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            <input
+              name="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
           </label>
           {error ? <div className="error-text">{error}</div> : null}
           <div className="modal-actions">
