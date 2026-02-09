@@ -1,10 +1,15 @@
-import ReactMarkdown from "react-markdown";
+import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeSanitize from "rehype-sanitize";
 
 type MarkdownProps = {
   value: string;
   className?: string;
+};
+
+type MarkdownCodeProps = React.ComponentPropsWithoutRef<"code"> & {
+  inline?: boolean;
+  node?: unknown;
 };
 
 const Markdown = ({ value, className }: MarkdownProps) => {
@@ -15,36 +20,35 @@ const Markdown = ({ value, className }: MarkdownProps) => {
     return <div className={classes} />;
   }
 
+  const components: Components = {
+    a: ({ children, ...props }) => (
+      <a {...props} target="_blank" rel="noreferrer noopener">
+        {children}
+      </a>
+    ),
+    code: (props) => {
+      const { children, className: codeClassName, inline, ...rest } = props as MarkdownCodeProps;
+      if (inline) {
+        return (
+          <code className="markdown-inline-code" {...rest}>
+            {children}
+          </code>
+        );
+      }
+
+      return (
+        <pre className="markdown-code-block">
+          <code className={codeClassName} {...rest}>
+            {children}
+          </code>
+        </pre>
+      );
+    },
+  };
+
   return (
     <div className={classes}>
-      <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
-        rehypePlugins={[rehypeSanitize]}
-        components={{
-          a: ({ children, ...props }) => (
-            <a {...props} target="_blank" rel="noreferrer noopener">
-              {children}
-            </a>
-          ),
-          code: ({ children, className: codeClassName, inline, ...props }) => {
-            if (inline) {
-              return (
-                <code className="markdown-inline-code" {...props}>
-                  {children}
-                </code>
-              );
-            }
-
-            return (
-              <pre className="markdown-code-block">
-                <code className={codeClassName} {...props}>
-                  {children}
-                </code>
-              </pre>
-            );
-          },
-        }}
-      >
+      <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSanitize]} components={components}>
         {content}
       </ReactMarkdown>
     </div>

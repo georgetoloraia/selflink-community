@@ -86,6 +86,69 @@ export type LoginResponse = {
   [key: string]: unknown;
 };
 
+const toId = (value: unknown): string => {
+  if (typeof value === "string") return value;
+  if (typeof value === "number") return String(value);
+  return String(value ?? "");
+};
+
+const toOptionalId = (value: unknown): string | undefined => {
+  if (value === null || value === undefined) return undefined;
+  const normalized = toId(value);
+  return normalized.length ? normalized : undefined;
+};
+
+const normalizeUserTiny = (user?: UserTiny | null): UserTiny | undefined => {
+  if (!user) return undefined;
+  return {
+    ...user,
+    id: toId(user.id),
+  };
+};
+
+const normalizeProblem = (problem: Problem): Problem => ({
+  ...problem,
+  id: toId(problem.id),
+  working_on_this: problem.working_on_this?.map((person) => ({
+    ...person,
+    id: toOptionalId(person.id),
+  })),
+});
+
+const normalizeProblemComment = (comment: ProblemComment): ProblemComment => ({
+  ...comment,
+  id: toId(comment.id),
+  user: normalizeUserTiny(comment.user) ?? comment.user,
+});
+
+const normalizeWorkArtifact = (artifact: WorkArtifact): WorkArtifact => ({
+  ...artifact,
+  id: toId(artifact.id),
+  user: normalizeUserTiny(artifact.user) ?? artifact.user,
+});
+
+const normalizeProblemEvent = (event: ProblemEvent): ProblemEvent => ({
+  ...event,
+  id: toId(event.id),
+  actor: normalizeUserTiny(event.actor) ?? event.actor,
+});
+
+const normalizeWorkToggleResponse = (data: WorkToggleResponse): WorkToggleResponse => ({
+  ...data,
+  problem_id: toId(data.problem_id),
+});
+
+const normalizeProblemLikeToggleResponse = (data: ProblemLikeToggleResponse): ProblemLikeToggleResponse => ({
+  ...data,
+  problem_id: toId(data.problem_id),
+});
+
+const normalizeCommentLikeToggleResponse = (data: CommentLikeToggleResponse): CommentLikeToggleResponse => ({
+  ...data,
+  problem_id: toId(data.problem_id),
+  comment_id: toId(data.comment_id),
+});
+
 const unwrapResults = <T,>(data: unknown): T[] => {
   if (Array.isArray(data)) return data as T[];
   if (data && typeof data === "object" && Array.isArray((data as any).results)) {
@@ -101,47 +164,47 @@ export const getSummary = async () => {
 
 export const listProblems = async (params?: { status?: ProblemStatus }) => {
   const { data } = await apiClient.get("problems/", { params });
-  return unwrapResults<Problem>(data);
+  return unwrapResults<Problem>(data).map(normalizeProblem);
 };
 
 export const getProblem = async (id: string) => {
   const { data } = await apiClient.get<Problem>(`problems/${id}/`);
-  return data;
+  return normalizeProblem(data);
 };
 
 export const listProblemComments = async (id: string) => {
   const { data } = await apiClient.get(`problems/${id}/comments/`);
-  return unwrapResults<ProblemComment>(data);
+  return unwrapResults<ProblemComment>(data).map(normalizeProblemComment);
 };
 
 export const createProblemComment = async (id: string, body: string, parent_id?: string) => {
   const { data } = await apiClient.post<ProblemComment>(`problems/${id}/comments/`, { body, parent_id });
-  return data;
+  return normalizeProblemComment(data);
 };
 
 export const createProblem = async (payload: { title: string; description?: string }) => {
   const { data } = await apiClient.post<Problem>("problems/", payload);
-  return data;
+  return normalizeProblem(data);
 };
 
 export const likeProblem = async (id: string) => {
   const { data } = await apiClient.post<ProblemLikeToggleResponse>(`problems/${id}/like/`);
-  return data;
+  return normalizeProblemLikeToggleResponse(data);
 };
 
 export const unlikeProblem = async (id: string) => {
   const { data } = await apiClient.delete<ProblemLikeToggleResponse>(`problems/${id}/like/`);
-  return data;
+  return normalizeProblemLikeToggleResponse(data);
 };
 
 export const workOnProblem = async (id: string) => {
   const { data } = await apiClient.post<WorkToggleResponse>(`problems/${id}/work/`);
-  return data;
+  return normalizeWorkToggleResponse(data);
 };
 
 export const unworkOnProblem = async (id: string) => {
   const { data } = await apiClient.delete<WorkToggleResponse>(`problems/${id}/work/`);
-  return data;
+  return normalizeWorkToggleResponse(data);
 };
 
 export const getAgreement = async (id: string) => {
@@ -156,12 +219,12 @@ export const acceptAgreement = async (id: string) => {
 
 export const listProblemEvents = async (problemId: string) => {
   const { data } = await apiClient.get(`problems/${problemId}/events/`);
-  return unwrapResults<ProblemEvent>(data);
+  return unwrapResults<ProblemEvent>(data).map(normalizeProblemEvent);
 };
 
 export const listArtifacts = async (problemId: string) => {
   const { data } = await apiClient.get(`problems/${problemId}/artifacts/`);
-  return unwrapResults<WorkArtifact>(data);
+  return unwrapResults<WorkArtifact>(data).map(normalizeWorkArtifact);
 };
 
 export const createArtifact = async (
@@ -169,36 +232,36 @@ export const createArtifact = async (
   payload: { title: string; description?: string; url?: string }
 ) => {
   const { data } = await apiClient.post<WorkArtifact>(`problems/${problemId}/artifacts/`, payload);
-  return data;
+  return normalizeWorkArtifact(data);
 };
 
 export const getArtifact = async (id: string) => {
   const { data } = await apiClient.get<WorkArtifact>(`artifacts/${id}/`);
-  return data;
+  return normalizeWorkArtifact(data);
 };
 
 export const listArtifactComments = async (id: string) => {
   const { data } = await apiClient.get(`artifacts/${id}/comments/`);
-  return unwrapResults<ProblemComment>(data);
+  return unwrapResults<ProblemComment>(data).map(normalizeProblemComment);
 };
 
 export const createArtifactComment = async (id: string, body: string, parent_id?: string) => {
   const { data } = await apiClient.post<ProblemComment>(`artifacts/${id}/comments/`, { body, parent_id });
-  return data;
+  return normalizeProblemComment(data);
 };
 
 export const likeProblemComment = async (problemId: string, commentId: string) => {
   const { data } = await apiClient.post<CommentLikeToggleResponse>(
     `problems/${problemId}/comments/${commentId}/like/`
   );
-  return data;
+  return normalizeCommentLikeToggleResponse(data);
 };
 
 export const unlikeProblemComment = async (problemId: string, commentId: string) => {
   const { data } = await apiClient.delete<CommentLikeToggleResponse>(
     `problems/${problemId}/comments/${commentId}/like/`
   );
-  return data;
+  return normalizeCommentLikeToggleResponse(data);
 };
 
 export const login = async (username: string, password: string) => {
