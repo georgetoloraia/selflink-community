@@ -7,13 +7,14 @@
     <title>SelfLink Community</title>
     <script>
       (function () {
+        var base = /\.github\.io$/.test(window.location.hostname) ? "/selflink-community/" : "/";
         try {
           var target = sessionStorage.getItem("gh-pages-redirect");
           if (!target) return;
           sessionStorage.removeItem("gh-pages-redirect");
           window.history.replaceState(null, "", target);
         } catch (error) {
-          window.history.replaceState(null, "", "/selflink-community/");
+          window.history.replaceState(null, "", base);
         }
       })();
     </script>

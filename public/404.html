@@ -7,8 +7,9 @@
     <script>
       (function () {
         var l = window.location;
-        var base = "/selflink-community";
-        if (l.pathname.indexOf(base) !== 0) {
+        var isGhPages = /\.github\.io$/.test(l.hostname);
+        var base = isGhPages ? "/selflink-community" : "";
+        if (base && l.pathname.indexOf(base) !== 0) {
           l.replace(base + "/");
           return;
         }
