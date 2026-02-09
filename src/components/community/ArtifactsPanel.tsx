@@ -4,13 +4,13 @@ import { useQuery } from "@tanstack/react-query";
 import * as communityApi from "../../api/community";
 
 export type ArtifactsPanelProps = {
-  problemId: number | null;
+  problemId: string | null;
   artifacts: communityApi.WorkArtifact[];
   isLoading: boolean;
   isAuthed: boolean;
   onRequireLogin: () => void;
   onCreate: (payload: { title: string; description?: string; url?: string }) => void;
-  onCreateComment: (artifactId: number, body: string) => void;
+  onCreateComment: (artifactId: string, body: string) => void;
   onNotFound: () => void;
   error?: string | null;
 };
@@ -22,10 +22,10 @@ const ArtifactComments = ({
   onCreateComment,
   onNotFound,
 }: {
-  artifactId: number;
+  artifactId: string;
   isAuthed: boolean;
   onRequireLogin: () => void;
-  onCreateComment: (artifactId: number, body: string) => void;
+  onCreateComment: (artifactId: string, body: string) => void;
   onNotFound: () => void;
 }) => {
   const [body, setBody] = useState("");
@@ -97,7 +97,7 @@ const ArtifactsPanel = ({
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [url, setUrl] = useState("");
-  const [openComments, setOpenComments] = useState<Record<number, boolean>>({});
+  const [openComments, setOpenComments] = useState<Record<string, boolean>>({});
 
   const handleCreateArtifact = (event: FormEvent) => {
     event.preventDefault();
@@ -116,7 +116,7 @@ const ArtifactsPanel = ({
     setUrl("");
   };
 
-  const toggleComments = (artifactId: number) => {
+  const toggleComments = (artifactId: string) => {
     setOpenComments((prev) => ({ ...prev, [artifactId]: !prev[artifactId] }));
   };
 

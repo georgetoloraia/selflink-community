@@ -6,7 +6,7 @@ type CommentsPanelProps = {
   title?: string;
   comments: ProblemComment[];
   onSubmit: (body: string) => void;
-  onToggleLike: (commentId: number, hasLiked: boolean) => void;
+  onToggleLike: (commentId: string, hasLiked: boolean) => void;
   onRequireLogin: () => void;
   isAuthed: boolean;
   isLoading: boolean;

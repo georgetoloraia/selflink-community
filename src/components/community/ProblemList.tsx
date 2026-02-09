@@ -2,8 +2,8 @@ import type { Problem } from "../../api/community";
 
 type ProblemListProps = {
   problems: Problem[];
-  selectedId: number | null;
-  onSelect: (id: number) => void;
+  selectedId: string | null;
+  onSelect: (id: string) => void;
   onAddNew: () => void;
   onRequireLogin: () => void;
   isAuthed: boolean;

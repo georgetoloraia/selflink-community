@@ -4,7 +4,7 @@ import * as communityApi from "../../api/community";
 
 type AgreementModalProps = {
   isOpen: boolean;
-  problemId: number | null;
+  problemId: string | null;
   onClose: () => void;
   onAccepted: () => void;
 };
@@ -14,13 +14,13 @@ const AgreementModal = ({ isOpen, problemId, onClose, onAccepted }: AgreementMod
   const enabled = isOpen && problemId !== null;
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["agreement", problemId],
-    queryFn: () => communityApi.getAgreement(problemId as number),
+    queryFn: () => communityApi.getAgreement(problemId as string),
     enabled,
   });
 
   const hasAgreement = Boolean(data?.agreement);
   const acceptMutation = useMutation({
-    mutationFn: () => communityApi.acceptAgreement(problemId as number),
+    mutationFn: () => communityApi.acceptAgreement(problemId as string),
     onSuccess: () => {
       if (problemId !== null) {
         void queryClient.invalidateQueries({ queryKey: ["problem", problemId] });

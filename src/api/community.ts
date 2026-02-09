@@ -1,7 +1,7 @@
 import { apiClient } from "./client";
 
 export type Money = { amount: string; currency: string };
-export type UserTiny = { id: number; username?: string; avatar_url?: string | null };
+export type UserTiny = { id: string; username?: string; avatar_url?: string | null };
 
 export type CommunitySummary = {
   as_of?: string;
@@ -14,7 +14,7 @@ export type CommunitySummary = {
 export type ProblemStatus = "open" | "in_progress" | "resolved";
 
 export type Problem = {
-  id: number;
+  id: string;
   title?: string;
   description?: string;
   status?: ProblemStatus;
@@ -28,7 +28,7 @@ export type Problem = {
   working_count?: number;
   has_liked?: boolean;
   is_working?: boolean;
-  working_on_this?: Array<{ id?: number; username?: string; avatar_url?: string | null }>;
+  working_on_this?: Array<{ id?: string; username?: string; avatar_url?: string | null }>;
   views?: number;
   last_activity?: string;
   comments?: number;
@@ -38,7 +38,7 @@ export type Problem = {
 };
 
 export type ProblemAgreement = {
-  id: number;
+  id: string;
   license_spdx?: string;
   version?: string;
   text?: string;
@@ -49,7 +49,7 @@ export type Agreement = ProblemAgreement;
 export type AgreementResponse = { agreement: ProblemAgreement | null };
 
 export type ProblemEvent = {
-  id: number;
+  id: string;
   type: string;
   created_at: string;
   actor?: UserTiny | null;
@@ -57,7 +57,7 @@ export type ProblemEvent = {
 };
 
 export type ProblemComment = {
-  id: number;
+  id: string;
   body: string;
   created_at: string;
   user: UserTiny;
@@ -66,7 +66,7 @@ export type ProblemComment = {
 };
 
 export type WorkArtifact = {
-  id: number;
+  id: string;
   title: string;
   description: string;
   url: string;
@@ -74,9 +74,9 @@ export type WorkArtifact = {
   user: UserTiny;
 };
 
-export type WorkToggleResponse = { problem_id: number; is_working: boolean; working_count: number };
-export type ProblemLikeToggleResponse = { problem_id: number; has_liked: boolean; likes_count: number };
-export type CommentLikeToggleResponse = { problem_id: number; comment_id: number; has_liked: boolean; likes_count: number };
+export type WorkToggleResponse = { problem_id: string; is_working: boolean; working_count: number };
+export type ProblemLikeToggleResponse = { problem_id: string; has_liked: boolean; likes_count: number };
+export type CommentLikeToggleResponse = { problem_id: string; comment_id: string; has_liked: boolean; likes_count: number };
 
 export type LoginResponse = {
   token_type: "Bearer" | "Token" | string;
@@ -104,17 +104,17 @@ export const listProblems = async (params?: { status?: ProblemStatus }) => {
   return unwrapResults<Problem>(data);
 };
 
-export const getProblem = async (id: number) => {
+export const getProblem = async (id: string) => {
   const { data } = await apiClient.get<Problem>(`problems/${id}/`);
   return data;
 };
 
-export const listProblemComments = async (id: number) => {
+export const listProblemComments = async (id: string) => {
   const { data } = await apiClient.get(`problems/${id}/comments/`);
   return unwrapResults<ProblemComment>(data);
 };
 
-export const createProblemComment = async (id: number, body: string, parent_id?: number) => {
+export const createProblemComment = async (id: string, body: string, parent_id?: string) => {
   const { data } = await apiClient.post<ProblemComment>(`problems/${id}/comments/`, { body, parent_id });
   return data;
 };
@@ -124,77 +124,77 @@ export const createProblem = async (payload: { title: string; description?: stri
   return data;
 };
 
-export const likeProblem = async (id: number) => {
+export const likeProblem = async (id: string) => {
   const { data } = await apiClient.post<ProblemLikeToggleResponse>(`problems/${id}/like/`);
   return data;
 };
 
-export const unlikeProblem = async (id: number) => {
+export const unlikeProblem = async (id: string) => {
   const { data } = await apiClient.delete<ProblemLikeToggleResponse>(`problems/${id}/like/`);
   return data;
 };
 
-export const workOnProblem = async (id: number) => {
+export const workOnProblem = async (id: string) => {
   const { data } = await apiClient.post<WorkToggleResponse>(`problems/${id}/work/`);
   return data;
 };
 
-export const unworkOnProblem = async (id: number) => {
+export const unworkOnProblem = async (id: string) => {
   const { data } = await apiClient.delete<WorkToggleResponse>(`problems/${id}/work/`);
   return data;
 };
 
-export const getAgreement = async (id: number) => {
+export const getAgreement = async (id: string) => {
   const { data } = await apiClient.get<AgreementResponse>(`problems/${id}/agreement/`);
   return data;
 };
 
-export const acceptAgreement = async (id: number) => {
+export const acceptAgreement = async (id: string) => {
   const { data } = await apiClient.post(`problems/${id}/agreement/accept/`);
   return data;
 };
 
-export const listProblemEvents = async (problemId: number) => {
+export const listProblemEvents = async (problemId: string) => {
   const { data } = await apiClient.get(`problems/${problemId}/events/`);
   return unwrapResults<ProblemEvent>(data);
 };
 
-export const listArtifacts = async (problemId: number) => {
+export const listArtifacts = async (problemId: string) => {
   const { data } = await apiClient.get(`problems/${problemId}/artifacts/`);
   return unwrapResults<WorkArtifact>(data);
 };
 
 export const createArtifact = async (
-  problemId: number,
+  problemId: string,
   payload: { title: string; description?: string; url?: string }
 ) => {
   const { data } = await apiClient.post<WorkArtifact>(`problems/${problemId}/artifacts/`, payload);
   return data;
 };
 
-export const getArtifact = async (id: number) => {
+export const getArtifact = async (id: string) => {
   const { data } = await apiClient.get<WorkArtifact>(`artifacts/${id}/`);
   return data;
 };
 
-export const listArtifactComments = async (id: number) => {
+export const listArtifactComments = async (id: string) => {
   const { data } = await apiClient.get(`artifacts/${id}/comments/`);
   return unwrapResults<ProblemComment>(data);
 };
 
-export const createArtifactComment = async (id: number, body: string, parent_id?: number) => {
+export const createArtifactComment = async (id: string, body: string, parent_id?: string) => {
   const { data } = await apiClient.post<ProblemComment>(`artifacts/${id}/comments/`, { body, parent_id });
   return data;
 };
 
-export const likeProblemComment = async (problemId: number, commentId: number) => {
+export const likeProblemComment = async (problemId: string, commentId: string) => {
   const { data } = await apiClient.post<CommentLikeToggleResponse>(
     `problems/${problemId}/comments/${commentId}/like/`
   );
   return data;
 };
 
-export const unlikeProblemComment = async (problemId: number, commentId: number) => {
+export const unlikeProblemComment = async (problemId: string, commentId: string) => {
   const { data } = await apiClient.delete<CommentLikeToggleResponse>(
     `problems/${problemId}/comments/${commentId}/like/`
   );

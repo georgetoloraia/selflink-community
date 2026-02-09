@@ -8,4 +8,12 @@ export default defineConfig(({ mode }) => ({
       ? (process.env.VITE_PUBLIC_BASE ?? "/selflink-community/")
       : "/",
   plugins: [react()],
+  server: {
+    proxy: {
+      "/api": {
+        target: "http://localhost:8001",
+        changeOrigin: true,
+      },
+    },
+  },
 }));

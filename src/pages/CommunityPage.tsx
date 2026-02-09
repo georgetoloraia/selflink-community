@@ -14,16 +14,16 @@ const CommunityPage = () => {
   const queryClient = useQueryClient();
   const { isAuthed, logout } = useAuth();
 
-  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loginOpen, setLoginOpen] = useState(false);
   const [agreementOpen, setAgreementOpen] = useState(false);
-  const [agreementProblemId, setAgreementProblemId] = useState<number | null>(null);
+  const [agreementProblemId, setAgreementProblemId] = useState<string | null>(null);
   const [newProblemOpen, setNewProblemOpen] = useState(false);
   const [inlineError, setInlineError] = useState<string | null>(null);
   const [staleNotice, setStaleNotice] = useState<string | null>(null);
 
   const pendingActionRef = useRef<{ action: () => Promise<void>; consumed: boolean } | null>(null);
-  const lastBadIdRef = useRef<number | null>(null);
+  const lastBadIdRef = useRef<string | null>(null);
 
   const retryNon4xx = (failureCount: number, error: unknown) => {
     const status = getStatus(error);
@@ -45,7 +45,7 @@ const CommunityPage = () => {
 
   const problemQuery = useQuery<communityApi.Problem>({
     queryKey: ["problem", selectedId],
-    queryFn: () => communityApi.getProblem(selectedId as number),
+    queryFn: () => communityApi.getProblem(selectedId as string),
     enabled: selectedId !== null,
     retry: retryNon4xx,
   });
@@ -54,21 +54,21 @@ const CommunityPage = () => {
 
   const commentsQuery = useQuery<communityApi.ProblemComment[]>({
     queryKey: ["problem-comments", selectedId],
-    queryFn: () => communityApi.listProblemComments(selectedId as number),
+    queryFn: () => communityApi.listProblemComments(selectedId as string),
     enabled: problemReady,
     retry: retryNon4xx,
   });
 
   const artifactsQuery = useQuery<communityApi.WorkArtifact[]>({
     queryKey: ["artifacts", selectedId],
-    queryFn: () => communityApi.listArtifacts(selectedId as number),
+    queryFn: () => communityApi.listArtifacts(selectedId as string),
     enabled: problemReady,
     retry: retryNon4xx,
   });
 
   const eventsQuery = useQuery<communityApi.ProblemEvent[]>({
     queryKey: ["events", selectedId],
-    queryFn: () => communityApi.listProblemEvents(selectedId as number),
+    queryFn: () => communityApi.listProblemEvents(selectedId as string),
     enabled: selectedId !== null,
     retry: retryNon4xx,
   });
@@ -143,7 +143,7 @@ const CommunityPage = () => {
     return () => window.removeEventListener("sl:unauthorized", handler);
   }, []);
 
-  const setAgreementFor = (problemId: number | null, action: () => Promise<unknown>) => {
+  const setAgreementFor = (problemId: string | null, action: () => Promise<unknown>) => {
     setAgreementProblemId(problemId);
     pendingActionRef.current = {
       consumed: false,
@@ -162,7 +162,7 @@ const CommunityPage = () => {
     setAgreementOpen(true);
   };
 
-  const runGuarded = async (action: () => Promise<unknown>, problemId?: number | null) => {
+  const runGuarded = async (action: () => Promise<unknown>, problemId?: string | null) => {
     if (!isAuthed) {
       setLoginOpen(true);
       return;
@@ -201,7 +201,7 @@ const CommunityPage = () => {
   };
 
   const likeMutation = useMutation({
-    mutationFn: ({ id, hasLiked }: { id: number; hasLiked: boolean }) =>
+    mutationFn: ({ id, hasLiked }: { id: string; hasLiked: boolean }) =>
       hasLiked ? communityApi.unlikeProblem(id) : communityApi.likeProblem(id),
     onSuccess: (data) => {
       if (selectedId !== null) {
@@ -223,7 +223,7 @@ const CommunityPage = () => {
   });
 
   const workMutation = useMutation({
-    mutationFn: ({ id, working }: { id: number; working: boolean }) =>
+    mutationFn: ({ id, working }: { id: string; working: boolean }) =>
       working ? communityApi.unworkOnProblem(id) : communityApi.workOnProblem(id),
     onSuccess: (data) => {
       if (selectedId !== null) {
@@ -245,7 +245,7 @@ const CommunityPage = () => {
   });
 
   const createCommentMutation = useMutation({
-    mutationFn: ({ id, body }: { id: number; body: string }) => communityApi.createProblemComment(id, body),
+    mutationFn: ({ id, body }: { id: string; body: string }) => communityApi.createProblemComment(id, body),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["problem-comments", selectedId] });
       if (selectedId !== null) {
@@ -255,7 +255,7 @@ const CommunityPage = () => {
   });
 
   const createArtifactMutation = useMutation({
-    mutationFn: ({ id, payload }: { id: number; payload: { title: string; description?: string; url?: string } }) =>
+    mutationFn: ({ id, payload }: { id: string; payload: { title: string; description?: string; url?: string } }) =>
       communityApi.createArtifact(id, payload),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["artifacts", selectedId] });
@@ -267,7 +267,7 @@ const CommunityPage = () => {
   });
 
   const toggleCommentLikeMutation = useMutation({
-    mutationFn: ({ problemId, commentId, hasLiked }: { problemId: number; commentId: number; hasLiked: boolean }) =>
+    mutationFn: ({ problemId, commentId, hasLiked }: { problemId: string; commentId: string; hasLiked: boolean }) =>
       hasLiked
         ? communityApi.unlikeProblemComment(problemId, commentId)
         : communityApi.likeProblemComment(problemId, commentId),
@@ -284,7 +284,7 @@ const CommunityPage = () => {
   });
 
   const createArtifactCommentMutation = useMutation({
-    mutationFn: ({ id, body }: { id: number; body: string }) => communityApi.createArtifactComment(id, body),
+    mutationFn: ({ id, body }: { id: string; body: string }) => communityApi.createArtifactComment(id, body),
     onSuccess: (_data, variables) => {
       void queryClient.invalidateQueries({ queryKey: ["artifact-comments", variables.id] });
       if (selectedId !== null) {
@@ -371,7 +371,7 @@ const CommunityPage = () => {
               runGuarded(
                 () =>
                   likeMutation.mutateAsync({
-                    id: selectedId as number,
+                    id: selectedId as string,
                     hasLiked: Boolean(selectedProblem?.has_liked),
                   }),
                 selectedId
@@ -379,7 +379,7 @@ const CommunityPage = () => {
             }
             onToggleWork={(working) =>
               runGuarded(
-                () => workMutation.mutateAsync({ id: selectedId as number, working }),
+                () => workMutation.mutateAsync({ id: selectedId as string, working }),
                 selectedId
               )
             }
@@ -388,13 +388,13 @@ const CommunityPage = () => {
             commentsProps={{
               comments: commentsQuery.data ?? [],
               onSubmit: (body) =>
-                runGuarded(() => createCommentMutation.mutateAsync({ id: selectedId as number, body }), selectedId),
+                runGuarded(() => createCommentMutation.mutateAsync({ id: selectedId as string, body }), selectedId),
               onToggleLike: (commentId, hasLiked) => {
                 if (selectedId === null) return;
                 runGuarded(
                   () =>
                     toggleCommentLikeMutation.mutateAsync({
-                      problemId: selectedId as number,
+                      problemId: selectedId as string,
                       commentId,
                       hasLiked,
                     }),
@@ -415,7 +415,7 @@ const CommunityPage = () => {
               onNotFound: handleNotFound,
               onCreate: (payload) =>
                 runGuarded(
-                  () => createArtifactMutation.mutateAsync({ id: selectedId as number, payload }),
+                  () => createArtifactMutation.mutateAsync({ id: selectedId as string, payload }),
                   selectedId
                 ),
               onCreateComment: (artifactId, body) =>
