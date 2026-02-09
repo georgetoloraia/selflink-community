@@ -72,6 +72,7 @@ const CommentsPanel = ({
       </div>
       <form className="comment-form" onSubmit={handleSubmit}>
         <textarea
+          name="problem-comment"
           rows={3}
           placeholder={isAuthed ? "Add a comment" : "Log in to comment"}
           value={body}
