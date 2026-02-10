@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { useMutation } from "@tanstack/react-query";
 import * as communityApi from "../../api/community";
+import Markdown from "../Markdown/Markdown";
 
 type NewProblemModalProps = {
   isOpen: boolean;
@@ -13,6 +14,7 @@ type NewProblemModalProps = {
 const NewProblemModal = ({ isOpen, onClose, onCreated, onError }: NewProblemModalProps) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [activeTab, setActiveTab] = useState<"write" | "preview">("write");
 
   const mutation = useMutation({
     mutationFn: () =>
@@ -23,6 +25,7 @@ const NewProblemModal = ({ isOpen, onClose, onCreated, onError }: NewProblemModa
     onSuccess: (problem) => {
       setTitle("");
       setDescription("");
+      setActiveTab("write");
       onCreated(problem);
       onClose();
     },
@@ -54,12 +57,45 @@ const NewProblemModal = ({ isOpen, onClose, onCreated, onError }: NewProblemModa
           </label>
           <label className="field">
             <span>Description</span>
+            <div className="markdown-tabs" role="tablist" aria-label="Description editor tabs">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeTab === "write"}
+                className={`markdown-tab${activeTab === "write" ? " active" : ""}`}
+                onClick={() => setActiveTab("write")}
+              >
+                Write
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeTab === "preview"}
+                className={`markdown-tab${activeTab === "preview" ? " active" : ""}`}
+                onClick={() => setActiveTab("preview")}
+              >
+                Preview
+              </button>
+            </div>
+            {activeTab === "write" ? (
             <textarea
               name="problem-description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={4}
             />
+            ) : (
+              <div className="markdown-preview" role="tabpanel">
+                {description.trim() ? (
+                  <Markdown value={description} />
+                ) : (
+                  <div className="markdown-preview-empty">Nothing to preview yet.</div>
+                )}
+              </div>
+            )}
+            {activeTab === "write" ? (
+              <div className="field-hint">Supports Markdown: headings, lists, links, code blocks.</div>
+            ) : null}
           </label>
           <div className="modal-actions">
             <button type="button" className="btn secondary" onClick={onClose}>

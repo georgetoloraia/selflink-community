@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Problem } from "../../api/community";
 import CommentsPanel from "./CommentsPanel";
 import ArtifactsPanel from "./ArtifactsPanel";
@@ -25,13 +26,34 @@ const ProblemDetail = ({
   artifactsProps,
   eventsProps,
 }: ProblemDetailProps) => {
-  if (!problem) {
-    return (
-      <section className="panel detail-panel">
-        <div className="empty">Select a problem to see details.</div>
-      </section>
-    );
-  }
+  const [isReadingMode, setIsReadingMode] = useState(false);
+  const descriptionRef = useRef<HTMLDivElement | null>(null);
+  const [tocHeadings, setTocHeadings] = useState<Array<{ id: string; text: string; level: 2 | 3 }>>([]);
+  const descriptionText = problem?.description ?? "No description provided.";
+  const shouldShowToc = tocHeadings.length >= 3 || (descriptionText.length >= 600 && tocHeadings.length > 0);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("sl_reading_mode");
+      if (stored === "true") {
+        setIsReadingMode(true);
+      }
+    } catch {
+      // Ignore localStorage access issues.
+    }
+  }, []);
+
+  const toggleReadingMode = () => {
+    setIsReadingMode((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem("sl_reading_mode", String(next));
+      } catch {
+        // Ignore localStorage access issues.
+      }
+      return next;
+    });
+  };
 
   const handleLike = () => {
     if (!isAuthed) {
@@ -46,6 +68,7 @@ const ProblemDetail = ({
       onRequireLogin();
       return;
     }
+    if (!problem) return;
     onToggleWork(Boolean(problem.is_working));
   };
 
@@ -63,6 +86,67 @@ const ProblemDetail = ({
     return `${days}d ago`;
   };
 
+  const slugify = (value: string) => {
+    const base = value
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-");
+    return base || "section";
+  };
+
+  useEffect(() => {
+    if (!problem) {
+      setTocHeadings([]);
+      return;
+    }
+    const container = descriptionRef.current;
+    if (!container) {
+      setTocHeadings([]);
+      return;
+    }
+    const headings = Array.from(container.querySelectorAll("h2, h3"));
+    const seen = new Map<string, number>();
+    const nextHeadings: Array<{ id: string; text: string; level: 2 | 3 }> = headings.map((heading) => {
+      const text = heading.textContent?.trim() ?? "";
+      const level: 2 | 3 = heading.tagName.toLowerCase() === "h3" ? 3 : 2;
+      const baseSlug = slugify(text);
+      const count = seen.get(baseSlug) ?? 0;
+      const slug = count > 0 ? `${baseSlug}-${count + 1}` : baseSlug;
+      seen.set(baseSlug, count + 1);
+      heading.id = slug;
+      return { id: slug, text: text || "Section", level };
+    });
+    setTocHeadings(nextHeadings);
+  }, [descriptionText, problem]);
+
+  const tocItems = useMemo(
+    () =>
+      tocHeadings.map((item) => (
+        <button
+          key={item.id}
+          type="button"
+          className={`toc-item${item.level === 3 ? " level-3" : ""}`}
+          onClick={() => {
+            const target = descriptionRef.current?.querySelector<HTMLElement>(`#${item.id}`);
+            target?.scrollIntoView({ behavior: "smooth", block: "start" });
+          }}
+        >
+          {item.text}
+        </button>
+      )),
+    [tocHeadings]
+  );
+
+  if (!problem) {
+    return (
+      <section className="panel detail-panel">
+        <div className="empty">Select a problem to see details.</div>
+      </section>
+    );
+  }
+
   const workingList = Array.isArray(problem.working_on_this)
     ? problem.working_on_this.slice(0, 20)
     : [];
@@ -70,7 +154,7 @@ const ProblemDetail = ({
   const lastActivity = problem.last_activity_at ?? problem.last_activity ?? problem.created_at;
 
   return (
-    <section className="panel detail-panel">
+    <section className={`panel detail-panel${isReadingMode ? " sl-reading-mode" : ""}`}>
       <div className="detail-header">
         <div>
           <h2>{problem.title ?? "Untitled"}</h2>
@@ -80,6 +164,9 @@ const ProblemDetail = ({
           </div>
         </div>
         <div className="detail-actions">
+          <button className="btn secondary reading-toggle" onClick={toggleReadingMode} type="button">
+            Reading mode {isReadingMode ? "On" : "Off"}
+          </button>
           <button className="btn secondary" onClick={handleLike}>
             {problem.has_liked ? "Liked" : "Like"}
           </button>
@@ -88,10 +175,15 @@ const ProblemDetail = ({
           </button>
         </div>
       </div>
-      <Markdown
-        className="problem-description"
-        value={problem.description ?? "No description provided."}
-      />
+      {isReadingMode && shouldShowToc ? (
+        <div className="toc-card">
+          <div className="toc-title">On this page</div>
+          <div className="toc-list">{tocItems}</div>
+        </div>
+      ) : null}
+      <div className="problem-description-wrap" ref={descriptionRef}>
+        <Markdown className="problem-description" value={descriptionText} />
+      </div>
       <div className="working-row">
         {workingList.length > 0 ? (
           <div className="working-list">
@@ -106,6 +198,14 @@ const ProblemDetail = ({
         ) : null}
       </div>
       <div className="detail-sections">
+        {!isReadingMode && shouldShowToc ? (
+          <section className="sub-panel toc-panel">
+            <div className="sub-panel-header">
+              <h3>On this page</h3>
+            </div>
+            <div className="toc-list">{tocItems}</div>
+          </section>
+        ) : null}
         <CommentsPanel {...commentsProps} />
         <ArtifactsPanel {...artifactsProps} />
         <ActivityPanel {...eventsProps} />

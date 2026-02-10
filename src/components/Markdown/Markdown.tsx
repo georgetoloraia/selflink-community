@@ -1,6 +1,8 @@
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
-import rehypeSanitize from "rehype-sanitize";
+import rehypeHighlight from "rehype-highlight";
+import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
+import "highlight.js/styles/github-dark.css";
 
 type MarkdownProps = {
   value: string;
@@ -15,6 +17,16 @@ type MarkdownCodeProps = React.ComponentPropsWithoutRef<"code"> & {
 const Markdown = ({ value, className }: MarkdownProps) => {
   const content = value ?? "";
   const classes = ["markdown-render", className].filter(Boolean).join(" ");
+  const baseAttributes = defaultSchema.attributes ?? {};
+  const sanitizeSchema = {
+    ...defaultSchema,
+    attributes: {
+      ...baseAttributes,
+      code: [...(baseAttributes.code ?? []), ["className"]],
+      pre: [...(baseAttributes.pre ?? []), ["className"]],
+      span: [...(baseAttributes.span ?? []), ["className"]],
+    },
+  };
 
   if (!content.trim()) {
     return <div className={classes} />;
@@ -48,7 +60,11 @@ const Markdown = ({ value, className }: MarkdownProps) => {
 
   return (
     <div className={classes}>
-      <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSanitize]} components={components}>
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        rehypePlugins={[rehypeHighlight, [rehypeSanitize, sanitizeSchema]]}
+        components={components}
+      >
         {content}
       </ReactMarkdown>
     </div>
