@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { FormEvent } from "react";
+import type { SyntheticEvent } from "react";
 import { useMutation } from "@tanstack/react-query";
 import * as communityApi from "../../api/community";
 import Markdown from "../Markdown/Markdown";
@@ -36,7 +36,7 @@ const NewProblemModal = ({ isOpen, onClose, onCreated, onError }: NewProblemModa
 
   if (!isOpen) return null;
 
-  const handleSubmit = (event: FormEvent) => {
+  const handleSubmit = (event: SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
     mutation.mutate();
   };

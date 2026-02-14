@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { FormEvent } from "react";
+import type { SyntheticEvent } from "react";
 import { isInvalidCredentials } from "../../api/client";
 import { useAuth } from "../../auth/useAuth";
 
@@ -17,7 +17,7 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
 
   if (!isOpen) return null;
 
-  const handleSubmit = async (event: FormEvent) => {
+  const handleSubmit = async (event: SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
     setLoading(true);
     setError(null);

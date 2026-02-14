@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import PageShell from "../components/layout/PageShell";
 import LoginModal from "../components/modals/LoginModal";
@@ -24,6 +24,9 @@ const CommunityPage = () => {
 
   const pendingActionRef = useRef<{ action: () => Promise<void>; consumed: boolean } | null>(null);
   const lastBadIdRef = useRef<string | null>(null);
+  const deferStateUpdate = useCallback((update: () => void) => {
+    window.setTimeout(update, 0);
+  }, []);
 
   const retryNon4xx = (failureCount: number, error: unknown) => {
     const status = getStatus(error);
@@ -77,9 +80,9 @@ const CommunityPage = () => {
     if (!selectedId && problemsQuery.data && problemsQuery.data.length > 0) {
       const candidate = problemsQuery.data[0].id;
       if (lastBadIdRef.current === candidate) return;
-      setSelectedId(candidate);
+      deferStateUpdate(() => setSelectedId(candidate));
     }
-  }, [problemsQuery.data, selectedId]);
+  }, [problemsQuery.data, selectedId, deferStateUpdate]);
 
   useEffect(() => {
     if (!problemsQuery.data) return;
@@ -88,54 +91,54 @@ const CommunityPage = () => {
     if (!exists) {
       const candidate = problemsQuery.data[0]?.id ?? null;
       if (candidate === lastBadIdRef.current) {
-        setSelectedId(null);
+        deferStateUpdate(() => setSelectedId(null));
       } else {
-        setSelectedId(candidate);
+        deferStateUpdate(() => setSelectedId(candidate));
       }
-      setStaleNotice("This problem no longer exists. Select another.");
+      deferStateUpdate(() => setStaleNotice("This problem no longer exists. Select another."));
     }
-  }, [problemsQuery.data, selectedId]);
+  }, [problemsQuery.data, selectedId, deferStateUpdate]);
 
   useEffect(() => {
     if (!problemsQuery.data || selectedId === null) return;
     const exists = problemsQuery.data.some((problem) => problem.id === selectedId);
     if (exists) {
-      setStaleNotice(null);
+      deferStateUpdate(() => setStaleNotice(null));
     }
-  }, [problemsQuery.data, selectedId]);
+  }, [problemsQuery.data, selectedId, deferStateUpdate]);
 
   useEffect(() => {
     if (problemQuery.isError && getStatus(problemQuery.error) === 404) {
       if (selectedId !== null && lastBadIdRef.current !== selectedId) {
         lastBadIdRef.current = selectedId;
-        setSelectedId(null);
-        setStaleNotice("This problem no longer exists. Select another.");
+        deferStateUpdate(() => setSelectedId(null));
+        deferStateUpdate(() => setStaleNotice("This problem no longer exists. Select another."));
         void queryClient.invalidateQueries({ queryKey: ["problems"] });
       }
     }
-  }, [problemQuery.isError, problemQuery.error, queryClient, selectedId]);
+  }, [problemQuery.isError, problemQuery.error, queryClient, selectedId, deferStateUpdate]);
 
   useEffect(() => {
     if (commentsQuery.isError && getStatus(commentsQuery.error) === 404) {
       if (selectedId !== null && lastBadIdRef.current !== selectedId) {
         lastBadIdRef.current = selectedId;
-        setSelectedId(null);
-        setStaleNotice("This problem no longer exists. Select another.");
+        deferStateUpdate(() => setSelectedId(null));
+        deferStateUpdate(() => setStaleNotice("This problem no longer exists. Select another."));
         void queryClient.invalidateQueries({ queryKey: ["problems"] });
       }
     }
-  }, [commentsQuery.isError, commentsQuery.error, queryClient, selectedId]);
+  }, [commentsQuery.isError, commentsQuery.error, queryClient, selectedId, deferStateUpdate]);
 
   useEffect(() => {
     if (artifactsQuery.isError && getStatus(artifactsQuery.error) === 404) {
       if (selectedId !== null && lastBadIdRef.current !== selectedId) {
         lastBadIdRef.current = selectedId;
-        setSelectedId(null);
-        setStaleNotice("This problem no longer exists. Select another.");
+        deferStateUpdate(() => setSelectedId(null));
+        deferStateUpdate(() => setStaleNotice("This problem no longer exists. Select another."));
         void queryClient.invalidateQueries({ queryKey: ["problems"] });
       }
     }
-  }, [artifactsQuery.isError, artifactsQuery.error, queryClient, selectedId]);
+  }, [artifactsQuery.isError, artifactsQuery.error, queryClient, selectedId, deferStateUpdate]);
 
   useEffect(() => {
     const handler = () => setLoginOpen(true);

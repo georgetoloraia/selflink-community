@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import type { FormEvent } from "react";
+import type { SyntheticEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { getStatus } from "../../api/client";
 import * as communityApi from "../../api/community";
 
 export type ArtifactsPanelProps = {
@@ -35,13 +36,13 @@ const ArtifactComments = ({
   });
 
   useEffect(() => {
-    const status = (commentsQuery.error as any)?.response?.status;
+    const status = getStatus(commentsQuery.error);
     if (commentsQuery.isError && status === 404) {
       onNotFound();
     }
   }, [commentsQuery.isError, commentsQuery.error, onNotFound]);
 
-  const handleSubmit = (event: FormEvent) => {
+  const handleSubmit = (event: SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!isAuthed) {
       onRequireLogin();
@@ -99,7 +100,7 @@ const ArtifactsPanel = ({
   const [url, setUrl] = useState("");
   const [openComments, setOpenComments] = useState<Record<string, boolean>>({});
 
-  const handleCreateArtifact = (event: FormEvent) => {
+  const handleCreateArtifact = (event: SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!isAuthed) {
       onRequireLogin();

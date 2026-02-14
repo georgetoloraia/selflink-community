@@ -26,21 +26,24 @@ const ProblemDetail = ({
   artifactsProps,
   eventsProps,
 }: ProblemDetailProps) => {
-  const [isReadingMode, setIsReadingMode] = useState(false);
+  const [isReadingMode, setIsReadingMode] = useState(() => {
+    try {
+      return localStorage.getItem("sl_reading_mode") === "true";
+    } catch {
+      return false;
+    }
+  });
+  const [currentTimeMs, setCurrentTimeMs] = useState(() => Date.now());
   const descriptionRef = useRef<HTMLDivElement | null>(null);
   const [tocHeadings, setTocHeadings] = useState<Array<{ id: string; text: string; level: 2 | 3 }>>([]);
   const descriptionText = problem?.description ?? "No description provided.";
   const shouldShowToc = tocHeadings.length >= 3 || (descriptionText.length >= 600 && tocHeadings.length > 0);
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem("sl_reading_mode");
-      if (stored === "true") {
-        setIsReadingMode(true);
-      }
-    } catch {
-      // Ignore localStorage access issues.
-    }
+    const intervalId = window.setInterval(() => {
+      setCurrentTimeMs(Date.now());
+    }, 60000);
+    return () => window.clearInterval(intervalId);
   }, []);
 
   const toggleReadingMode = () => {
@@ -76,7 +79,7 @@ const ProblemDetail = ({
     if (!iso) return "—";
     const parsed = new Date(iso);
     if (Number.isNaN(parsed.getTime())) return "—";
-    const diffMs = Math.max(0, Date.now() - parsed.getTime());
+    const diffMs = Math.max(0, currentTimeMs - parsed.getTime());
     const minutes = Math.floor(diffMs / 60000);
     if (minutes < 1) return "just now";
     if (minutes < 60) return `${minutes}m ago`;
@@ -98,13 +101,17 @@ const ProblemDetail = ({
 
   useEffect(() => {
     if (!problem) {
-      setTocHeadings([]);
-      return;
+      const timeoutId = window.setTimeout(() => {
+        setTocHeadings([]);
+      }, 0);
+      return () => window.clearTimeout(timeoutId);
     }
     const container = descriptionRef.current;
     if (!container) {
-      setTocHeadings([]);
-      return;
+      const timeoutId = window.setTimeout(() => {
+        setTocHeadings([]);
+      }, 0);
+      return () => window.clearTimeout(timeoutId);
     }
     const headings = Array.from(container.querySelectorAll("h2, h3"));
     const seen = new Map<string, number>();
@@ -118,7 +125,10 @@ const ProblemDetail = ({
       heading.id = slug;
       return { id: slug, text: text || "Section", level };
     });
-    setTocHeadings(nextHeadings);
+    const timeoutId = window.setTimeout(() => {
+      setTocHeadings(nextHeadings);
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
   }, [descriptionText, problem]);
 
   const tocItems = useMemo(
