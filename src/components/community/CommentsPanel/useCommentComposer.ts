@@ -31,6 +31,7 @@ export const useCommentComposer = (placeholder: string = PLACEHOLDER): UseCommen
   const overlayTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const lastRoleButtonRef = useRef<HTMLButtonElement | null>(null);
   const pendingTemplateSelectRef = useRef(false);
+  const suppressNextInlineOpenRef = useRef(false);
 
   const clampFontSize = useCallback((value: number) => Math.min(22, Math.max(12, value)), []);
 
@@ -61,6 +62,10 @@ export const useCommentComposer = (placeholder: string = PLACEHOLDER): UseCommen
   );
 
   const openOverlayFromInline = useCallback(() => {
+    if (suppressNextInlineOpenRef.current) {
+      suppressNextInlineOpenRef.current = false;
+      return;
+    }
     if (isComposerOpen) return;
     lastRoleButtonRef.current = null;
     pendingTemplateSelectRef.current = false;
@@ -74,6 +79,7 @@ export const useCommentComposer = (placeholder: string = PLACEHOLDER): UseCommen
       if (lastRoleButtonRef.current) {
         lastRoleButtonRef.current.focus();
       } else {
+        suppressNextInlineOpenRef.current = true;
         inlineTextareaRef.current?.focus();
       }
     });
