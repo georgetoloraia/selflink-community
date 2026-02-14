@@ -1,4 +1,4 @@
-import type { FormEvent } from "react";
+import type { SyntheticEvent } from "react";
 import type { ProblemComment } from "../../api/community";
 import Markdown from "../Markdown/Markdown";
 import { COMMENT_TEMPLATES, PLACEHOLDER } from "./CommentsPanel/commentTemplates";
@@ -43,7 +43,7 @@ const CommentsPanel = ({
 
   const canSubmit = isAuthed && body.trim().length > 0;
 
-  const handleSubmit = (event: FormEvent) => {
+  const handleSubmit = (event: SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!isAuthed) {
       onRequireLogin();
