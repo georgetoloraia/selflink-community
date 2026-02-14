@@ -3,17 +3,23 @@ import type { Dispatch, RefObject, SetStateAction } from "react";
 import { COMMENT_TEMPLATES, PLACEHOLDER } from "./commentTemplates";
 
 type UseCommentComposerResult = {
+  // Comment body and setter shared by inline + overlay composers.
   body: string;
   setBody: Dispatch<SetStateAction<string>>;
+  // Overlay visibility and open/close controls.
   isComposerOpen: boolean;
   openOverlayFromInline: () => void;
   closeOverlay: () => void;
+  // Template application entry point for role buttons.
   applyTemplateFromButton: (templateValue: string, buttonEl: HTMLButtonElement | null) => void;
+  // Overlay editor font controls.
   editorFontSize: number;
   setEditorFontSize: Dispatch<SetStateAction<number>>;
   clampFontSize: (value: number) => number;
+  // Overlay template selector state.
   selectedTemplate: string;
   onTemplateSelect: (label: string) => void;
+  // Textarea refs used for focus restore and selection.
   inlineTextareaRef: RefObject<HTMLTextAreaElement | null>;
   overlayTextareaRef: RefObject<HTMLTextAreaElement | null>;
 };
