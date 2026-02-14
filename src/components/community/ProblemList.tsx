@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import type { Problem } from "../../api/community";
 
 type ProblemListProps = {
@@ -10,11 +11,20 @@ type ProblemListProps = {
 };
 
 const ProblemList = ({ problems, selectedId, onSelect, onAddNew, onRequireLogin, isAuthed }: ProblemListProps) => {
+  const [currentTimeMs, setCurrentTimeMs] = useState(() => Date.now());
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setCurrentTimeMs(Date.now());
+    }, 60000);
+    return () => window.clearInterval(intervalId);
+  }, []);
+
   const formatRelativeTime = (iso?: string) => {
     if (!iso) return "—";
     const parsed = new Date(iso);
     if (Number.isNaN(parsed.getTime())) return "—";
-    const diffMs = Math.max(0, Date.now() - parsed.getTime());
+    const diffMs = Math.max(0, currentTimeMs - parsed.getTime());
     const minutes = Math.floor(diffMs / 60000);
     if (minutes < 1) return "just now";
     if (minutes < 60) return `${minutes}m ago`;

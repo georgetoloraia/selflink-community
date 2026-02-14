@@ -86,6 +86,13 @@ export type LoginResponse = {
   [key: string]: unknown;
 };
 
+export type AuthUser = {
+  username?: string;
+  handle?: string;
+  name?: string;
+  [key: string]: unknown;
+};
+
 const toId = (value: unknown): string => {
   if (typeof value === "string") return value;
   if (typeof value === "number") return String(value);
@@ -151,10 +158,16 @@ const normalizeCommentLikeToggleResponse = (data: CommentLikeToggleResponse): Co
 
 const unwrapResults = <T,>(data: unknown): T[] => {
   if (Array.isArray(data)) return data as T[];
-  if (data && typeof data === "object" && Array.isArray((data as any).results)) {
-    return (data as any).results as T[];
+  if (hasResultsArray<T>(data)) {
+    return data.results;
   }
   return [];
+};
+
+const hasResultsArray = <T,>(value: unknown): value is { results: T[] } => {
+  if (!value || typeof value !== "object") return false;
+  const maybeResults = (value as { results?: unknown }).results;
+  return Array.isArray(maybeResults);
 };
 
 export const getSummary = async () => {
@@ -270,7 +283,7 @@ export const login = async (username: string, password: string) => {
 };
 
 export const me = async () => {
-  const { data } = await apiClient.get("auth/me/");
+  const { data } = await apiClient.get<AuthUser>("auth/me/");
   return data;
 };
 

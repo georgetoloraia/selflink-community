@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { getStatus } from "../../api/client";
 import * as communityApi from "../../api/community";
 
 export type ArtifactsPanelProps = {
@@ -35,7 +36,7 @@ const ArtifactComments = ({
   });
 
   useEffect(() => {
-    const status = (commentsQuery.error as any)?.response?.status;
+    const status = getStatus(commentsQuery.error);
     if (commentsQuery.isError && status === 404) {
       onNotFound();
     }

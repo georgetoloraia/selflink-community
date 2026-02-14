@@ -1,4 +1,5 @@
 import axios from "axios";
+import type { AxiosError } from "axios";
 
 export const STORAGE_KEY = "sl_community_access";
 
@@ -94,31 +95,35 @@ apiClient.interceptors.response.use(
 );
 
 export const isAgreementRequired = (error: unknown) => {
-  const detail = error && typeof error === "object" ? (error as any).response?.data?.detail : undefined;
+  const detail = getAxiosErrorDetail(error);
   return detail === "AGREEMENT_REQUIRED";
 };
 
 export const isInvalidCredentials = (error: unknown) => {
-  const detail = error && typeof error === "object" ? (error as any).response?.data?.detail : undefined;
+  const detail = getAxiosErrorDetail(error);
   return detail === "INVALID_CREDENTIALS";
 };
 
 export const getErrorDetail = (error: unknown): string | null => {
-  if (!error || typeof error !== "object") return null;
-  const detail = (error as any).response?.data?.detail;
+  const detail = getAxiosErrorDetail(error);
   if (typeof detail === "string") return detail;
   return null;
 };
 
 export const getStatus = (error: unknown): number | null => {
-  if (!error || typeof error !== "object") return null;
-  const status = (error as any).response?.status;
+  const status = toAxiosError(error)?.response?.status;
   return typeof status === "number" ? status : null;
 };
 
 export const isNotFound = (error: unknown): boolean => getStatus(error) === 404;
 
 export const isNetworkError = (error: unknown): boolean => {
-  if (!error || typeof error !== "object") return false;
-  return !(error as any).response;
+  const axiosError = toAxiosError(error);
+  if (!axiosError) return false;
+  return !axiosError.response;
 };
+
+const toAxiosError = (error: unknown): AxiosError<{ detail?: unknown }> | null =>
+  axios.isAxiosError(error) ? error : null;
+
+const getAxiosErrorDetail = (error: unknown): unknown => toAxiosError(error)?.response?.data?.detail;

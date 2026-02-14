@@ -1,37 +1,29 @@
-import React, { createContext, useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { clearStoredAuth, readStoredAuth, writeStoredAuth } from "../api/client";
 import * as communityApi from "../api/community";
-
-export type AuthContextValue = {
-  user: any | null;
-  tokenType: string | null;
-  accessToken: string | null;
-  isAuthed: boolean;
-  login: (username: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
-};
-
-export const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+import { AuthContext } from "./auth-context";
+import type { AuthContextValue, AuthUser } from "./auth-context";
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<any | null>(null);
-  const [tokenType, setTokenType] = useState<string | null>(null);
-  const [accessToken, setAccessToken] = useState<string | null>(null);
-
-  const syncFromStorage = useCallback(() => {
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [tokenType, setTokenType] = useState<string | null>(() => {
     const stored = readStoredAuth();
-    setTokenType((stored?.token_type as string) ?? null);
-    setAccessToken((stored?.access as string) ?? null);
-  }, []);
+    return typeof stored?.token_type === "string" ? stored.token_type : null;
+  });
+  const [accessToken, setAccessToken] = useState<string | null>(() => {
+    const stored = readStoredAuth();
+    return typeof stored?.access === "string" ? stored.access : null;
+  });
 
   const bootstrap = useCallback(async () => {
     const stored = readStoredAuth();
-    if (!stored?.access) return;
+    const access = typeof stored?.access === "string" ? stored.access : null;
+    if (!access) return;
     try {
       const me = await communityApi.me();
       setUser(me);
-      setTokenType((stored.token_type as string) ?? null);
-      setAccessToken((stored.access as string) ?? null);
+      setTokenType(typeof stored?.token_type === "string" ? stored.token_type : null);
+      setAccessToken(access);
     } catch {
       clearStoredAuth();
       setUser(null);
@@ -41,9 +33,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   useEffect(() => {
-    syncFromStorage();
-    void bootstrap();
-  }, [syncFromStorage, bootstrap]);
+    const timeoutId = window.setTimeout(() => {
+      void bootstrap();
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [bootstrap]);
 
   useEffect(() => {
     const handler = () => {
@@ -60,11 +54,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     async (username: string, password: string) => {
       const data = await communityApi.login(username, password);
       writeStoredAuth(data);
-      syncFromStorage();
+      setTokenType(typeof data.token_type === "string" ? data.token_type : null);
+      setAccessToken(typeof data.access === "string" ? data.access : null);
       const me = await communityApi.me();
       setUser(me);
     },
-    [syncFromStorage]
+    []
   );
 
   const logout = useCallback(async () => {
